@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TripRole {
+  OWNER
+  MEMBER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum ActivityStatus {
+  PROPOSED
+  CONFIRMED
+  CANCELLED
+}
+
+enum VoteValue {
+  UP
+  DOWN
+}
+
+model User {
+  id                String          @id @default(uuid()) @db.Uuid
+  email             String          @unique
+  passwordHash      String
+  displayName       String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  memberships       TripMember[]
+  createdTrips      Trip[]          @relation("TripCreator")
+  createdActivities Activity[]      @relation("ActivityCreator")
+  votes             ActivityVote[]
+  paidExpenses      Expense[]       @relation("ExpensePayer")
+  expenseShares     ExpenseShare[]
+  sentInvitations   TripInvitation[] @relation("InvitationSender")
+}
+
+model Trip {
+  id            String           @id @default(uuid()) @db.Uuid
+  name          String
+  destination   String
+  startDate     DateTime         @db.Date
+  endDate       DateTime         @db.Date
+  currency      String           @default("GBP") @db.VarChar(3)
+  createdById   String           @db.Uuid
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  createdBy     User             @relation("TripCreator", fields: [createdById], references: [id])
+  members       TripMember[]
+  invitations   TripInvitation[]
+  activities    Activity[]
+  expenses      Expense[]
+
+  @@index([createdById])
+}
+
+model TripMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  tripId    String   @db.Uuid
+  userId    String   @db.Uuid
+  role      TripRole @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@index([userId])
+}
+
+model TripInvitation {
+  id          String           @id @default(uuid()) @db.Uuid
+  tripId      String           @db.Uuid
+  email       String
+  tokenHash   String           @unique
+  status      InvitationStatus @default(PENDING)
+  invitedById String           @db.Uuid
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+  trip        Trip             @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  invitedBy   User             @relation("InvitationSender", fields: [invitedById], references: [id])
+
+  @@unique([tripId, email])
+  @@index([email, status])
+}
+
+model Activity {
+  id          String         @id @default(uuid()) @db.Uuid
+  tripId      String         @db.Uuid
+  createdById String         @db.Uuid
+  title       String
+  description String?
+  location    String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  status      ActivityStatus @default(PROPOSED)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  trip        Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation("ActivityCreator", fields: [createdById], references: [id])
+  votes       ActivityVote[]
+
+  @@index([tripId, startsAt])
+}
+
+model ActivityVote {
+  id         String    @id @default(uuid()) @db.Uuid
+  activityId String    @db.Uuid
+  userId     String    @db.Uuid
+  value      VoteValue
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  activity   Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@index([userId])
+}
+
+model Expense {
+  id          String         @id @default(uuid()) @db.Uuid
+  tripId      String         @db.Uuid
+  paidById    String         @db.Uuid
+  title       String
+  amountMinor Int
+  currency    String         @db.VarChar(3)
+  incurredAt  DateTime
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  trip        Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidBy      User           @relation("ExpensePayer", fields: [paidById], references: [id])
+  shares      ExpenseShare[]
+
+  @@index([tripId, incurredAt])
+  @@index([paidById])
+}
+
+model ExpenseShare {
+  id          String   @id @default(uuid()) @db.Uuid
+  expenseId   String   @db.Uuid
+  userId      String   @db.Uuid
+  amountMinor Int
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+  @@index([userId])
+}
+
