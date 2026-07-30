@@ -1,8 +1,14 @@
 import { Router } from "express";
 
-import { registerBodySchema } from "./auth.schemas.js";
+import {
+  loginBodySchema,
+  registerBodySchema,
+} from "./auth.schemas.js";
+
 import {
   EmailAlreadyRegisteredError,
+  InvalidCredentialsError,
+  loginUser,
   registerUser,
 } from "./auth.service.js";
 
@@ -39,6 +45,48 @@ authRouter.post("/register", async (request, response, next) => {
       response.status(409).json({
         error: {
           code: "EMAIL_ALREADY_REGISTERED",
+          message: error.message,
+        },
+      });
+
+      return;
+    }
+
+    next(error);
+  }
+});
+
+authRouter.post("/login", async (request, response, next) => {
+  const validationResult = loginBodySchema.safeParse(request.body);
+
+  if (!validationResult.success) {
+    response.status(400).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "The login information is invalid",
+        details: validationResult.error.issues.map((issue) => ({
+          path: issue.path.join("."),
+          message: issue.message,
+        })),
+      },
+    });
+
+    return;
+  }
+
+  try {
+    const user = await loginUser(validationResult.data);
+
+    response.status(200).json({
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    if (error instanceof InvalidCredentialsError) {
+      response.status(401).json({
+        error: {
+          code: "INVALID_CREDENTIALS",
           message: error.message,
         },
       });

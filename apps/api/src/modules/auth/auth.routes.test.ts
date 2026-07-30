@@ -77,3 +77,49 @@ describe("POST /api/auth/register", () => {
     expect(response.body.error.code).toBe("EMAIL_ALREADY_REGISTERED");
   });
 });
+
+describe("POST /api/auth/login", () => {
+  const registration = {
+    displayName: "TripSync Route Test",
+    email: testEmail,
+    password: "correct horse battery staple",
+  };
+
+  it("returns a user for correct credentials", async () => {
+    await request(app).post("/api/auth/register").send(registration);
+
+    const response = await request(app).post("/api/auth/login").send({
+      email: registration.email,
+      password: registration.password,
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.user).toMatchObject({
+      displayName: registration.displayName,
+      email: registration.email,
+    });
+    expect(response.body.data.user).not.toHaveProperty("passwordHash");
+  });
+
+  it("returns 401 for an incorrect password", async () => {
+    await request(app).post("/api/auth/register").send(registration);
+
+    const response = await request(app).post("/api/auth/login").send({
+      email: registration.email,
+      password: "this password is incorrect",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("INVALID_CREDENTIALS");
+  });
+
+  it("returns the same 401 response for an unknown email", async () => {
+    const response = await request(app).post("/api/auth/login").send({
+      email: "unknown-user@tripsync.test",
+      password: "correct horse battery staple",
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe("INVALID_CREDENTIALS");
+  });
+});

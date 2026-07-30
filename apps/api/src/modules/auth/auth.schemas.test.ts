@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { registerBodySchema } from "./auth.schemas.js";
+import {
+  loginBodySchema,
+  registerBodySchema,
+} from "./auth.schemas.js";
 
 describe("registerBodySchema", () => {
   it("accepts and normalises valid registration data", () => {
@@ -43,6 +46,39 @@ describe("registerBodySchema", () => {
       email: "darshil@example.com",
       password: "correct horse battery staple",
       isAdmin: true,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("loginBodySchema", () => {
+  it("accepts and normalises valid login data", () => {
+    const result = loginBodySchema.parse({
+      email: "  DARSHIL@EXAMPLE.COM  ",
+      password: "correct horse battery staple",
+    });
+
+    expect(result).toEqual({
+      email: "darshil@example.com",
+      password: "correct horse battery staple",
+    });
+  });
+
+  it("rejects an empty password", () => {
+    const result = loginBodySchema.safeParse({
+      email: "darshil@example.com",
+      password: "",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unexpected properties", () => {
+    const result = loginBodySchema.safeParse({
+      email: "darshil@example.com",
+      password: "correct horse battery staple",
+      rememberMe: true,
     });
 
     expect(result.success).toBe(false);

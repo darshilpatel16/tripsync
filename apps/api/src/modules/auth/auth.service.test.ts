@@ -7,6 +7,8 @@ import { prisma } from "../../lib/prisma.js";
 import type { RegisterBody } from "./auth.schemas.js";
 import {
   EmailAlreadyRegisteredError,
+  InvalidCredentialsError,
+  loginUser,
   registerUser,
 } from "./auth.service.js";
 
@@ -57,5 +59,42 @@ describe("registerUser", () => {
     await expect(registerUser(testUserInput)).rejects.toBeInstanceOf(
       EmailAlreadyRegisteredError,
     );
+  });
+});
+
+describe("loginUser", () => {
+  it("returns safe user information for correct credentials", async () => {
+    await registerUser(testUserInput);
+
+    const user = await loginUser({
+      email: testUserInput.email,
+      password: testUserInput.password,
+    });
+
+    expect(user).toMatchObject({
+      displayName: testUserInput.displayName,
+      email: testUserInput.email,
+    });
+    expect(user).not.toHaveProperty("passwordHash");
+  });
+
+  it("rejects an incorrect password", async () => {
+    await registerUser(testUserInput);
+
+    await expect(
+      loginUser({
+        email: testUserInput.email,
+        password: "this password is incorrect",
+      }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
+  });
+
+  it("rejects an unknown email address", async () => {
+    await expect(
+      loginUser({
+        email: "unknown-user@tripsync.test",
+        password: "correct horse battery staple",
+      }),
+    ).rejects.toBeInstanceOf(InvalidCredentialsError);
   });
 });
