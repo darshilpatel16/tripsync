@@ -34,12 +34,13 @@ docs/        Product and architecture decisions
 
 ## Local setup
 
-1. Copy `.env.example` to `.env`.
-2. Start PostgreSQL and create a `tripsync` database.
-3. Run `npm install`.
-4. Run `npm run db:generate`.
-5. Run `npm run db:migrate`.
-6. Run `npm run dev`.
+1. Copy `apps/api/.env.example` to `apps/api/.env`.
+2. Replace `YOUR_PASSWORD` in `DATABASE_URL` with your local PostgreSQL password.
+3. Start PostgreSQL and create a database named `tripsync`.
+4. Run `npm install`.
+5. Run `npm run db:generate`.
+6. Run `npm run db:migrate`.
+7. Run `npm run dev`.
 
 Web: `http://localhost:5173`  
 API health check: `http://localhost:5000/api/health`
