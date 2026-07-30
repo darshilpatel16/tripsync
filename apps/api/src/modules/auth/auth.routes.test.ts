@@ -99,6 +99,22 @@ describe("POST /api/auth/login", () => {
       email: registration.email,
     });
     expect(response.body.data.user).not.toHaveProperty("passwordHash");
+
+    const sessionCookies = response.headers["set-cookie"];
+
+    expect(sessionCookies).toBeDefined();
+    expect(sessionCookies?.[0]).toContain("tripsync_session=");
+    expect(sessionCookies?.[0]).toContain("HttpOnly");
+    expect(sessionCookies?.[0]).toContain("SameSite=Lax");
+    expect(sessionCookies?.[0]).toContain("Path=/");
+
+    await expect(
+      prisma.session.count({
+        where: {
+          userId: response.body.data.user.id,
+        },
+      }),
+    ).resolves.toBe(1);
   });
 
   it("returns 401 for an incorrect password", async () => {

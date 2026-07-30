@@ -1,5 +1,12 @@
 import { Router } from "express";
 
+import { env } from "../../config/env.js";
+
+import {
+  createSession,
+  SESSION_COOKIE_NAME,
+} from "./session.service.js";
+
 import {
   loginBodySchema,
   registerBodySchema,
@@ -76,8 +83,17 @@ authRouter.post("/login", async (request, response, next) => {
 
   try {
     const user = await loginUser(validationResult.data);
+const session = await createSession(user.id);
 
-    response.status(200).json({
+response.cookie(SESSION_COOKIE_NAME, session.token, {
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite: "lax",
+  expires: session.expiresAt,
+  path: "/",
+});
+
+response.status(200).json({
       data: {
         user,
       },
