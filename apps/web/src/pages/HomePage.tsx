@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 const features = [
   [
     "Plan together",
@@ -17,12 +19,17 @@ export function HomePage() {
   return (
     <main>
       <nav className="nav" aria-label="Primary navigation">
-        <a className="brand" href="/">
+        <Link className="brand" to="/">
           TripSync
-        </a>
-        <a className="nav-link" href="#features">
-          How it works
-        </a>
+        </Link>
+        <div className="nav-actions">
+          <a className="nav-link" href="#features">
+            How it works
+          </a>
+          <Link className="nav-link" to="/login">
+            Sign in
+          </Link>
+        </div>
       </nav>
 
       <section className="hero">
@@ -33,7 +40,9 @@ export function HomePage() {
           without switching between five different apps.
         </p>
         <div className="actions">
-          <button type="button">Start planning</button>
+          <Link className="primary-action" to="/register">
+            Start planning
+          </Link>
           <a href="#features">Explore features</a>
         </div>
       </section>
