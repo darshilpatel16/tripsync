@@ -9,6 +9,7 @@ import { tripRouter } from "./modules/trips/trip.routes.js";
 import { invitationRouter } from "./modules/trips/invitation.routes.js";
 import cookieParser from "cookie-parser";
 import { activityRouter } from "./modules/activities/activity.routes.js";
+import { expenseRouter } from "./modules/expenses/expense.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -21,6 +22,7 @@ export const createApp = () => {
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/trips/:tripId/activities", activityRouter);
+  app.use("/api/trips/:tripId/expenses", expenseRouter);
   app.use("/api/trips", tripRouter);
   app.use("/api/invitations", invitationRouter);
 
