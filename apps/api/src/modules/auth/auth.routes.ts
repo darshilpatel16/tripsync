@@ -1,5 +1,6 @@
 import { Router, type CookieOptions } from "express";
 import { env } from "../../config/env.js";
+import { createRateLimiter } from "../../middleware/rate-limit.js";
 import { requireAuthentication } from "./auth.middleware.js";
 import {
   createSession,
@@ -8,18 +9,28 @@ import {
 } from "./session.service.js";
 
 import {
+  forgotPasswordBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resetPasswordBodySchema,
 } from "./auth.schemas.js";
 
 import {
+  createPasswordResetToken,
   EmailAlreadyRegisteredError,
   InvalidCredentialsError,
+  InvalidResetTokenError,
   loginUser,
   registerUser,
+  resetPassword,
 } from "./auth.service.js";
 
 export const authRouter = Router();
+
+const authenticationRateLimiter = createRateLimiter({
+  maxRequests: env.NODE_ENV === "test" ? 1000 : 10,
+  windowMs: 15 * 60 * 1000,
+});
 
 const sessionCookieOptions: CookieOptions = {
   httpOnly: true,
@@ -70,7 +81,7 @@ authRouter.post("/register", async (request, response, next) => {
   }
 });
 
-authRouter.post("/login", async (request, response, next) => {
+authRouter.post("/login", authenticationRateLimiter, async (request, response, next) => {
   const validationResult = loginBodySchema.safeParse(request.body);
 
   if (!validationResult.success) {
@@ -117,6 +128,85 @@ authRouter.post("/login", async (request, response, next) => {
     next(error);
   }
 });
+
+authRouter.post(
+  "/forgot-password",
+  authenticationRateLimiter,
+  async (request, response, next) => {
+    const validationResult = forgotPasswordBodySchema.safeParse(request.body);
+
+    if (!validationResult.success) {
+      response.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Enter a valid email address",
+          details: validationResult.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+      });
+      return;
+    }
+
+    try {
+      const reset = await createPasswordResetToken(
+        validationResult.data.email,
+      );
+
+      response.status(202).json({
+        data: {
+          message:
+            "If an account exists for that email, password reset instructions have been created.",
+          ...(env.NODE_ENV === "development" && reset
+            ? { resetToken: reset.token }
+            : {}),
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+);
+
+authRouter.post(
+  "/reset-password",
+  authenticationRateLimiter,
+  async (request, response, next) => {
+    const validationResult = resetPasswordBodySchema.safeParse(request.body);
+
+    if (!validationResult.success) {
+      response.status(400).json({
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "The password reset information is invalid",
+          details: validationResult.error.issues.map((issue) => ({
+            path: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+      });
+      return;
+    }
+
+    try {
+      await resetPassword(validationResult.data);
+      response.status(204).send();
+    } catch (error) {
+      if (error instanceof InvalidResetTokenError) {
+        response.status(400).json({
+          error: {
+            code: "INVALID_RESET_TOKEN",
+            message: error.message,
+          },
+        });
+        return;
+      }
+
+      next(error);
+    }
+  },
+);
 
 authRouter.get(
   "/me",

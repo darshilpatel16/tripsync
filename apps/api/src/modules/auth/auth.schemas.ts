@@ -39,3 +39,27 @@ export const loginBodySchema = z
   .strict();
 
 export type LoginBody = z.infer<typeof loginBodySchema>;
+
+export const forgotPasswordBodySchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Enter a valid email address"),
+  })
+  .strict();
+
+export type ForgotPasswordBody = z.infer<typeof forgotPasswordBodySchema>;
+
+export const resetPasswordBodySchema = z
+  .object({
+    token: z.string().min(1, "Reset token is required"),
+    password: z
+      .string()
+      .min(12, "Password must contain at least 12 characters")
+      .max(128, "Password must contain at most 128 characters"),
+  })
+  .strict();
+
+export type ResetPasswordBody = z.infer<typeof resetPasswordBodySchema>;

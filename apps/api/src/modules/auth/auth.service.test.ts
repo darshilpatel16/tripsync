@@ -1,16 +1,21 @@
 import "dotenv/config";
 
+import { createHash } from "node:crypto";
 import * as argon2 from "argon2";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
 
 import { prisma } from "../../lib/prisma.js";
 import type { RegisterBody } from "./auth.schemas.js";
 import {
+  createPasswordResetToken,
   EmailAlreadyRegisteredError,
   InvalidCredentialsError,
+  InvalidResetTokenError,
   loginUser,
   registerUser,
+  resetPassword,
 } from "./auth.service.js";
+import { createSession } from "./session.service.js";
 
 const testUserInput: RegisterBody = {
   displayName: "TripSync Test User",
@@ -96,5 +101,56 @@ describe("loginUser", () => {
         password: "correct horse battery staple",
       }),
     ).rejects.toBeInstanceOf(InvalidCredentialsError);
+  });
+});
+
+describe("password reset service", () => {
+  it("stores only a hash of the password reset token", async () => {
+    const user = await registerUser(testUserInput);
+    const reset = await createPasswordResetToken(user.email);
+
+    expect(reset).not.toBeNull();
+
+    const storedToken = await prisma.passwordResetToken.findFirstOrThrow({
+      where: { userId: user.id },
+    });
+
+    expect(storedToken.tokenHash).not.toBe(reset?.token);
+    expect(storedToken.tokenHash).toBe(
+      createHash("sha256").update(reset!.token).digest("hex"),
+    );
+  });
+
+  it("changes the password, consumes the token, and signs out old sessions", async () => {
+    const user = await registerUser(testUserInput);
+    await createSession(user.id);
+    const reset = await createPasswordResetToken(user.email);
+
+    await resetPassword({
+      token: reset!.token,
+      password: "the replacement secure password",
+    });
+
+    await expect(
+      loginUser({
+        email: user.email,
+        password: "the replacement secure password",
+      }),
+    ).resolves.toMatchObject({ id: user.id });
+    await expect(
+      prisma.session.count({ where: { userId: user.id } }),
+    ).resolves.toBe(0);
+    await expect(
+      resetPassword({
+        token: reset!.token,
+        password: "another replacement password",
+      }),
+    ).rejects.toBeInstanceOf(InvalidResetTokenError);
+  });
+
+  it("does not reveal whether an email address exists", async () => {
+    await expect(
+      createPasswordResetToken("unknown-user@tripsync.test"),
+    ).resolves.toBeNull();
   });
 });

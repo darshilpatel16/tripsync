@@ -5,6 +5,7 @@ import { afterAll, afterEach, describe, expect, it } from "vitest";
 
 import { createApp } from "../../app.js";
 import { prisma } from "../../lib/prisma.js";
+import { createPasswordResetToken } from "./auth.service.js";
 
 const app = createApp();
 const testEmail = "auth-route@tripsync.test";
@@ -193,5 +194,63 @@ describe("authenticated session routes", () => {
     expect(response.body.error.code).toBe(
       "AUTHENTICATION_REQUIRED",
     );
+  });
+});
+
+describe("password reset routes", () => {
+  const registration = {
+    displayName: "TripSync Reset Route Test",
+    email: testEmail,
+    password: "correct horse battery staple",
+  };
+
+  it("returns the same accepted response for known and unknown emails", async () => {
+    await request(app).post("/api/auth/register").send(registration);
+
+    const knownEmailResponse = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: registration.email });
+    const unknownEmailResponse = await request(app)
+      .post("/api/auth/forgot-password")
+      .send({ email: "unknown-user@tripsync.test" });
+
+    expect(knownEmailResponse.status).toBe(202);
+    expect(unknownEmailResponse.status).toBe(202);
+    expect(knownEmailResponse.body.data.message).toBe(
+      unknownEmailResponse.body.data.message,
+    );
+  });
+
+  it("resets the password with a valid one-time token", async () => {
+    await request(app).post("/api/auth/register").send(registration);
+    const reset = await createPasswordResetToken(registration.email);
+
+    const resetResponse = await request(app)
+      .post("/api/auth/reset-password")
+      .send({
+        token: reset!.token,
+        password: "the replacement secure password",
+      });
+
+    expect(resetResponse.status).toBe(204);
+
+    const loginResponse = await request(app).post("/api/auth/login").send({
+      email: registration.email,
+      password: "the replacement secure password",
+    });
+
+    expect(loginResponse.status).toBe(200);
+  });
+
+  it("rejects an invalid reset token", async () => {
+    const response = await request(app)
+      .post("/api/auth/reset-password")
+      .send({
+        token: "invalid-reset-token",
+        password: "the replacement secure password",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("INVALID_RESET_TOKEN");
   });
 });

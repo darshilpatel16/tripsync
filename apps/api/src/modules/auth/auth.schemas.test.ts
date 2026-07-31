@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  forgotPasswordBodySchema,
   loginBodySchema,
   registerBodySchema,
+  resetPasswordBodySchema,
 } from "./auth.schemas.js";
 
 describe("registerBodySchema", () => {
@@ -82,5 +84,34 @@ describe("loginBodySchema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("password reset schemas", () => {
+  it("normalises an email used to request a reset", () => {
+    expect(
+      forgotPasswordBodySchema.parse({ email: "  USER@EXAMPLE.COM " }),
+    ).toEqual({ email: "user@example.com" });
+  });
+
+  it("accepts a reset token and a strong new password", () => {
+    expect(
+      resetPasswordBodySchema.parse({
+        token: "example-reset-token",
+        password: "a new secure password",
+      }),
+    ).toEqual({
+      token: "example-reset-token",
+      password: "a new secure password",
+    });
+  });
+
+  it("rejects a short replacement password", () => {
+    expect(
+      resetPasswordBodySchema.safeParse({
+        token: "example-reset-token",
+        password: "short",
+      }).success,
+    ).toBe(false);
   });
 });
