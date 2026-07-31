@@ -50,11 +50,21 @@ describe("itinerary activity flow", () => {
       <ActivitySection
         currentUserId={ownerId}
         tripId={tripId}
+        tripEndDate="2026-09-17T00:00:00.000Z"
         tripRole="OWNER"
+        tripStartDate="2026-09-10T00:00:00.000Z"
       />,
     );
 
     expect(await screen.findByText(/no activities yet/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/starts/i)).toHaveAttribute(
+      "min",
+      "2026-09-10T00:00",
+    );
+    expect(screen.getByLabelText(/starts/i)).toHaveAttribute(
+      "max",
+      "2026-09-17T23:59",
+    );
     fireEvent.change(screen.getByLabelText(/activity name/i), {
       target: { value: activity.title },
     });
@@ -79,6 +89,7 @@ describe("itinerary activity flow", () => {
       });
     });
     expect(await screen.findByRole("heading", { name: activity.title })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /day 2 · friday 11 september/i })).toBeInTheDocument();
   });
 
   it("lets the owner confirm a proposed activity", async () => {
@@ -94,7 +105,9 @@ describe("itinerary activity flow", () => {
       <ActivitySection
         currentUserId={ownerId}
         tripId={tripId}
+        tripEndDate="2026-09-17T00:00:00.000Z"
         tripRole="OWNER"
+        tripStartDate="2026-09-10T00:00:00.000Z"
       />,
     );
 
@@ -124,7 +137,9 @@ describe("itinerary activity flow", () => {
       <ActivitySection
         currentUserId={ownerId}
         tripId={tripId}
+        tripEndDate="2026-09-17T00:00:00.000Z"
         tripRole="MEMBER"
+        tripStartDate="2026-09-10T00:00:00.000Z"
       />,
     );
 
@@ -173,7 +188,13 @@ describe("itinerary activity flow", () => {
     vi.mocked(activityApi.removeActivityVote).mockResolvedValue(removedVoteActivity);
 
     render(
-      <ActivitySection currentUserId={ownerId} tripId={tripId} tripRole="MEMBER" />,
+      <ActivitySection
+        currentUserId={ownerId}
+        tripEndDate="2026-09-17T00:00:00.000Z"
+        tripId={tripId}
+        tripRole="MEMBER"
+        tripStartDate="2026-09-10T00:00:00.000Z"
+      />,
     );
 
     fireEvent.click(await screen.findByText(/1 voted · 1 waiting/i));

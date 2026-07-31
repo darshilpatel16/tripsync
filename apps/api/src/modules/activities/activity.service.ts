@@ -28,6 +28,13 @@ export class ActivityScheduleError extends Error {
   }
 }
 
+export class ActivityTripDateError extends Error {
+  constructor() {
+    super("Activity times must fall within the trip dates");
+    this.name = "ActivityTripDateError";
+  }
+}
+
 const activitySelection = {
   id: true,
   tripId: true,
@@ -129,12 +136,39 @@ const requireActivityEditor = (
   }
 };
 
+const requireActivityWithinTripDates = async (
+  tripId: string,
+  startsAt: Date | null,
+  endsAt: Date | null,
+) => {
+  if (!startsAt) return;
+
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: { startDate: true, endDate: true },
+  });
+  if (!trip) throw new TripNotFoundError();
+
+  const finalTripMoment = new Date(trip.endDate);
+  finalTripMoment.setUTCHours(23, 59, 59, 999);
+  if (
+    startsAt < trip.startDate ||
+    startsAt > finalTripMoment ||
+    (endsAt && endsAt > finalTripMoment)
+  ) {
+    throw new ActivityTripDateError();
+  }
+};
+
 export const createActivity = async (
   userId: string,
   tripId: string,
   input: CreateActivityBody,
 ) => {
   await requireTripMember(userId, tripId);
+  const startsAt = toDate(input.startsAt) ?? null;
+  const endsAt = toDate(input.endsAt) ?? null;
+  await requireActivityWithinTripDates(tripId, startsAt, endsAt);
 
   const activity = await prisma.activity.create({
     data: {
@@ -143,8 +177,8 @@ export const createActivity = async (
       title: input.title,
       description: input.description ?? null,
       location: input.location ?? null,
-      startsAt: toDate(input.startsAt) ?? null,
-      endsAt: toDate(input.endsAt) ?? null,
+      startsAt,
+      endsAt,
     },
     select: activitySelection,
   });
@@ -182,6 +216,7 @@ export const updateActivity = async (
   if (endsAt && (!startsAt || endsAt < startsAt)) {
     throw new ActivityScheduleError();
   }
+  await requireActivityWithinTripDates(tripId, startsAt, endsAt);
 
   const activity = await prisma.activity.update({
     where: { id: activityId },

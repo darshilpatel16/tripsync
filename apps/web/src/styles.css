@@ -694,6 +694,24 @@ h2 {
   gap: 16px;
 }
 
+.activity-day-heading {
+  align-items: center;
+  color: #455048;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 14px;
+  letter-spacing: 0.08em;
+  margin: 26px 0 2px;
+  text-transform: uppercase;
+}
+
+.activity-day-heading::after {
+  background: #c9cec8;
+  content: "";
+  flex: 1;
+  height: 1px;
+}
+
 .activity-card {
   background: #fffdf7;
   border: 1px solid #d8d8ce;

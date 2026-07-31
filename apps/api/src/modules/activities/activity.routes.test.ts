@@ -153,4 +153,20 @@ describe("activity routes", () => {
     expect(removeResponse.body.data.activity.voting.currentUserVoted).toBe(false);
     expect(removeResponse.body.data.activity.voting.voted).toEqual([]);
   });
+
+  it("rejects an activity outside the trip dates", async () => {
+    const { member, tripId } = await createTripWithMember();
+    const response = await member.agent
+      .post(`/api/trips/${tripId}/activities`)
+      .send({
+        title: "After the holiday",
+        startsAt: "2026-09-18T10:00:00Z",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toMatchObject({
+      code: "VALIDATION_ERROR",
+      message: "The activity falls outside the trip dates",
+    });
+  });
 });

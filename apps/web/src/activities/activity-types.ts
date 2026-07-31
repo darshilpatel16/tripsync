@@ -41,4 +41,6 @@ export type ActivitySectionProps = {
   tripId: string;
   tripRole: TripRole;
   currentUserId: string;
+  tripStartDate: string;
+  tripEndDate: string;
 };

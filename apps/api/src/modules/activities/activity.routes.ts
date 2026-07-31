@@ -13,6 +13,7 @@ import {
   ActivityEditorRequiredError,
   ActivityNotFoundError,
   ActivityScheduleError,
+  ActivityTripDateError,
   addActivityVote,
   createActivity,
   deleteActivity,
@@ -66,6 +67,12 @@ const handleActivityError = (
   if (error instanceof ActivityScheduleError) {
     sendValidationError(response, "The activity schedule is invalid", [
       { path: ["endsAt"], message: error.message },
+    ]);
+    return;
+  }
+  if (error instanceof ActivityTripDateError) {
+    sendValidationError(response, "The activity falls outside the trip dates", [
+      { path: ["startsAt"], message: error.message },
     ]);
     return;
   }

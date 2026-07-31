@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Fragment, useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { ApiError } from "../lib/api";
 import {
@@ -80,6 +80,37 @@ const statusLabel: Record<ActivityStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+const getLocalDateKey = (value: string | null) => {
+  if (!value) return "unscheduled";
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const formatDayHeading = (activity: Activity, tripStartDate: string) => {
+  if (!activity.startsAt) return "Flexible plans · time to be decided";
+
+  const activityDate = new Date(activity.startsAt);
+  const [year, month, day] = tripStartDate.slice(0, 10).split("-").map(Number);
+  const tripStart = new Date(year!, month! - 1, day!);
+  const activityDay = new Date(
+    activityDate.getFullYear(),
+    activityDate.getMonth(),
+    activityDate.getDate(),
+  );
+  const dayNumber = Math.round(
+    (activityDay.getTime() - tripStart.getTime()) / 86_400_000,
+  ) + 1;
+  const readableDate = activityDate.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  return `Day ${dayNumber} · ${readableDate}`;
+};
+
 type ActivityFormProps = {
   form: ActivityFormState;
   isWorking: boolean;
@@ -87,6 +118,8 @@ type ActivityFormProps = {
   onCancel?: () => void;
   onChange: (field: keyof ActivityFormState, value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  tripEndDate: string;
+  tripStartDate: string;
 };
 
 function ActivityForm({
@@ -96,7 +129,12 @@ function ActivityForm({
   onCancel,
   onChange,
   onSubmit,
+  tripEndDate,
+  tripStartDate,
 }: ActivityFormProps) {
+  const minimumDateTime = `${tripStartDate.slice(0, 10)}T00:00`;
+  const maximumDateTime = `${tripEndDate.slice(0, 10)}T23:59`;
+
   return (
     <form className="activity-form" onSubmit={onSubmit}>
       <label className="form-field activity-title-field">
@@ -132,6 +170,8 @@ function ActivityForm({
       <label className="form-field">
         <span>Starts</span>
         <input
+          max={maximumDateTime}
+          min={minimumDateTime}
           onChange={(event) => onChange("startsAt", event.target.value)}
           type="datetime-local"
           value={form.startsAt}
@@ -140,7 +180,8 @@ function ActivityForm({
       <label className="form-field">
         <span>Ends</span>
         <input
-          min={form.startsAt || undefined}
+          max={maximumDateTime}
+          min={form.startsAt || minimumDateTime}
           onChange={(event) => onChange("endsAt", event.target.value)}
           type="datetime-local"
           value={form.endsAt}
@@ -168,6 +209,8 @@ export function ActivitySection({
   tripId,
   tripRole,
   currentUserId,
+  tripEndDate,
+  tripStartDate,
 }: ActivitySectionProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [createForm, setCreateForm] = useState(emptyForm);
@@ -322,6 +365,8 @@ export function ActivitySection({
           mode="create"
           onChange={changeCreateForm}
           onSubmit={handleCreate}
+          tripEndDate={tripEndDate}
+          tripStartDate={tripStartDate}
         />
       </div>
 
@@ -338,28 +383,40 @@ export function ActivitySection({
       ) : null}
 
       <div className="activity-list">
-        {activities.map((activity) => {
+        {activities.map((activity, index) => {
           const canEdit = tripRole === "OWNER" || activity.createdBy.id === currentUserId;
           const isWorking = workingId === activity.id;
+          const dayKey = getLocalDateKey(activity.startsAt);
+          const previousDayKey = index > 0
+            ? getLocalDateKey(activities[index - 1]!.startsAt)
+            : null;
+          const showDayHeading = dayKey !== previousDayKey;
 
           if (editingId === activity.id && editForm) {
             return (
-              <article className="activity-card activity-edit-card" key={activity.id}>
-                <p className="eyebrow">Editing activity</p>
-                <ActivityForm
-                  form={editForm}
-                  isWorking={isWorking}
-                  mode="edit"
-                  onCancel={cancelEditing}
-                  onChange={changeEditForm}
-                  onSubmit={handleUpdate}
-                />
-              </article>
+              <Fragment key={activity.id}>
+                {showDayHeading ? <h3 className="activity-day-heading">{formatDayHeading(activity, tripStartDate)}</h3> : null}
+                <article className="activity-card activity-edit-card">
+                  <p className="eyebrow">Editing activity</p>
+                  <ActivityForm
+                    form={editForm}
+                    isWorking={isWorking}
+                    mode="edit"
+                    onCancel={cancelEditing}
+                    onChange={changeEditForm}
+                    onSubmit={handleUpdate}
+                    tripEndDate={tripEndDate}
+                    tripStartDate={tripStartDate}
+                  />
+                </article>
+              </Fragment>
             );
           }
 
           return (
-            <article className={`activity-card activity-${activity.status.toLowerCase()}`} key={activity.id}>
+            <Fragment key={activity.id}>
+            {showDayHeading ? <h3 className="activity-day-heading">{formatDayHeading(activity, tripStartDate)}</h3> : null}
+            <article className={`activity-card activity-${activity.status.toLowerCase()}`}>
               <div className="activity-date-block">
                 <span>{activity.startsAt ? new Date(activity.startsAt).toLocaleDateString("en-GB", { day: "2-digit" }) : "—"}</span>
                 <strong>{activity.startsAt ? new Date(activity.startsAt).toLocaleDateString("en-GB", { month: "short" }) : "TBD"}</strong>
@@ -428,6 +485,7 @@ export function ActivitySection({
                 </div>
               </div>
             </article>
+            </Fragment>
           );
         })}
       </div>

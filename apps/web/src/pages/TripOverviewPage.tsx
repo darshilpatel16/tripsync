@@ -170,7 +170,9 @@ export function TripOverviewPage() {
           <ActivitySection
             currentUserId={user.id}
             tripId={trip.id}
+            tripEndDate={trip.endDate}
             tripRole={trip.role}
+            tripStartDate={trip.startDate}
           />
         ) : null}
 

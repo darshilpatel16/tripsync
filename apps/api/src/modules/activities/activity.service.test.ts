@@ -7,6 +7,7 @@ import { registerUser } from "../auth/auth.service.js";
 import { createTrip, TripNotFoundError } from "../trips/trip.service.js";
 import {
   ActivityEditorRequiredError,
+  ActivityTripDateError,
   addActivityVote,
   createActivity,
   deleteActivity,
@@ -168,5 +169,24 @@ describe("activity service", () => {
     const removed = await removeActivityVote(ownerId, tripId, activity.id);
     expect(removed.voting.voted).toEqual([]);
     expect(removed.voting.notVoted).toHaveLength(2);
+  });
+
+  it("rejects activity times outside the trip dates", async () => {
+    await expect(
+      createActivity(creatorId, tripId, {
+        title: "Too early",
+        startsAt: "2026-09-09T15:00:00Z",
+      }),
+    ).rejects.toBeInstanceOf(ActivityTripDateError);
+
+    const activity = await createActivity(creatorId, tripId, {
+      title: "Valid activity",
+      startsAt: "2026-09-12T15:00:00Z",
+    });
+    await expect(
+      updateActivity(creatorId, tripId, activity.id, {
+        startsAt: "2026-09-18T09:00:00Z",
+      }),
+    ).rejects.toBeInstanceOf(ActivityTripDateError);
   });
 });
