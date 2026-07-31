@@ -1,10 +1,9 @@
 import { Router, type CookieOptions } from "express";
 import { env } from "../../config/env.js";
-
+import { requireAuthentication } from "./auth.middleware.js";
 import {
   createSession,
   deleteSession,
-  findUserBySessionToken,
   SESSION_COOKIE_NAME,
 } from "./session.service.js";
 
@@ -119,45 +118,17 @@ authRouter.post("/login", async (request, response, next) => {
   }
 });
 
-authRouter.get("/me", async (request, response, next) => {
-  const sessionToken = request.cookies[SESSION_COOKIE_NAME];
-
-  if (typeof sessionToken !== "string") {
-    response.status(401).json({
-      error: {
-        code: "AUTHENTICATION_REQUIRED",
-        message: "You must be signed in",
-      },
-    });
-
-    return;
-  }
-
-  try {
-    const user = await findUserBySessionToken(sessionToken);
-
-    if (!user) {
-      response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions);
-
-      response.status(401).json({
-        error: {
-          code: "AUTHENTICATION_REQUIRED",
-          message: "You must be signed in",
-        },
-      });
-
-      return;
-    }
-
+authRouter.get(
+  "/me",
+  requireAuthentication,
+  (_request, response) => {
     response.status(200).json({
       data: {
-        user,
+        user: response.locals.user,
       },
     });
-  } catch (error) {
-    next(error);
-  }
-});
+  },
+);
 
 authRouter.post("/logout", async (request, response, next) => {
   const sessionToken = request.cookies[SESSION_COOKIE_NAME];
