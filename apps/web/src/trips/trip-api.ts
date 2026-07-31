@@ -62,6 +62,13 @@ export const getInvitation = async (token: string) => {
   return response.data.invitation;
 };
 
+export const listMyInvitations = async () => {
+  const response = await apiRequest<{ data: { invitations: InvitationDetail[] } }>(
+    "/invitations",
+  );
+  return response.data.invitations;
+};
+
 const respondToInvitation = async (
   token: string,
   decision: "accept" | "decline",
@@ -77,6 +84,22 @@ export const acceptInvitation = (token: string) =>
 
 export const declineInvitation = (token: string) =>
   respondToInvitation(token, "decline");
+
+const respondToDashboardInvitation = async (
+  invitationId: string,
+  decision: "accept" | "decline",
+) => {
+  const response = await apiRequest<{
+    data: { tripId: string; status: InvitationStatus };
+  }>(`/invitations/inbox/${invitationId}/${decision}`, { method: "POST" });
+  return response.data;
+};
+
+export const acceptDashboardInvitation = (invitationId: string) =>
+  respondToDashboardInvitation(invitationId, "accept");
+
+export const declineDashboardInvitation = (invitationId: string) =>
+  respondToDashboardInvitation(invitationId, "decline");
 
 export const removeTripMember = (tripId: string, userId: string) =>
   apiRequest<void>(`/trips/${tripId}/members/${userId}`, { method: "DELETE" });

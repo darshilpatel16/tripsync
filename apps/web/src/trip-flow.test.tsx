@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthContext } from "./auth/auth-context";
 import { CreateTripPage } from "./pages/CreateTripPage";
@@ -33,6 +33,11 @@ const trip = {
   createdAt: "2026-07-31T00:00:00.000Z",
   updatedAt: "2026-07-31T00:00:00.000Z",
 };
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(tripApi.listMyInvitations).mockResolvedValue([]);
+});
 
 describe("trip frontend flow", () => {
   it("shows the signed-in user's trips on the dashboard", async () => {
@@ -79,6 +84,53 @@ describe("trip frontend flow", () => {
         currency: "EUR",
       });
       expect(screen.getByRole("heading", { name: /trip overview reached/i })).toBeInTheDocument();
+    });
+  });
+
+  it("shows and accepts an invitation from the dashboard", async () => {
+    const invitation = {
+      id: "22222222-2222-4222-8222-222222222222",
+      email: authValue.user.email,
+      status: "PENDING" as const,
+      expiresAt: "2026-08-07T00:00:00.000Z",
+      createdAt: "2026-07-31T00:00:00.000Z",
+      trip: {
+        id: trip.id,
+        name: trip.name,
+        destination: trip.destination,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+      },
+      invitedBy: {
+        id: "33333333-3333-4333-8333-333333333333",
+        displayName: "Trip Owner",
+      },
+    };
+    vi.mocked(tripApi.listTrips).mockResolvedValue([]);
+    vi.mocked(tripApi.listMyInvitations).mockResolvedValue([invitation]);
+    vi.mocked(tripApi.acceptDashboardInvitation).mockResolvedValue({
+      tripId: trip.id,
+      status: "ACCEPTED",
+    });
+
+    render(
+      <AuthContext.Provider value={authValue}>
+        <MemoryRouter initialEntries={["/dashboard"]}>
+          <Routes>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/trips/:tripId" element={<h1>Accepted trip opened</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>,
+    );
+
+    expect(await screen.findByRole("heading", { name: trip.name })).toBeInTheDocument();
+    expect(screen.getByText(/invited by trip owner/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+
+    await waitFor(() => {
+      expect(tripApi.acceptDashboardInvitation).toHaveBeenCalledWith(invitation.id);
+      expect(screen.getByRole("heading", { name: /accepted trip opened/i })).toBeInTheDocument();
     });
   });
 });

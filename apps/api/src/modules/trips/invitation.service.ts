@@ -157,20 +157,32 @@ export const getInvitationByToken = async (token: string) => {
   return invitation;
 };
 
-export const respondToInvitation = async (
-  token: string,
+export const listUserInvitations = async (email: string) => {
+  const now = new Date();
+
+  await prisma.tripInvitation.updateMany({
+    where: { email, status: "PENDING", expiresAt: { lte: now } },
+    data: { status: "EXPIRED" },
+  });
+
+  return prisma.tripInvitation.findMany({
+    where: { email, status: "PENDING", expiresAt: { gt: now } },
+    orderBy: { createdAt: "desc" },
+    select: invitationSelection,
+  });
+};
+
+const completeInvitationResponse = async (
+  invitation: {
+    id: string;
+    tripId: string;
+    email: string;
+    status: "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+    expiresAt: Date;
+  },
   user: { id: string; email: string },
   decision: "ACCEPTED" | "DECLINED",
 ) => {
-  const tokenHash = hashInvitationToken(token);
-  const invitation = await prisma.tripInvitation.findUnique({
-    where: { tokenHash },
-    select: { id: true, tripId: true, email: true, status: true, expiresAt: true },
-  });
-
-  if (!invitation) {
-    throw new InvitationNotFoundError();
-  }
   if (invitation.email !== user.email) {
     throw new InvitationEmailMismatchError();
   }
@@ -202,4 +214,38 @@ export const respondToInvitation = async (
   });
 
   return { tripId: invitation.tripId, status: decision };
+};
+
+export const respondToInvitation = async (
+  token: string,
+  user: { id: string; email: string },
+  decision: "ACCEPTED" | "DECLINED",
+) => {
+  const tokenHash = hashInvitationToken(token);
+  const invitation = await prisma.tripInvitation.findUnique({
+    where: { tokenHash },
+    select: { id: true, tripId: true, email: true, status: true, expiresAt: true },
+  });
+
+  if (!invitation) {
+    throw new InvitationNotFoundError();
+  }
+  return completeInvitationResponse(invitation, user, decision);
+};
+
+export const respondToInvitationById = async (
+  invitationId: string,
+  user: { id: string; email: string },
+  decision: "ACCEPTED" | "DECLINED",
+) => {
+  const invitation = await prisma.tripInvitation.findUnique({
+    where: { id: invitationId },
+    select: { id: true, tripId: true, email: true, status: true, expiresAt: true },
+  });
+
+  if (!invitation) {
+    throw new InvitationNotFoundError();
+  }
+
+  return completeInvitationResponse(invitation, user, decision);
 };

@@ -1,13 +1,18 @@
 import { Router } from "express";
 
 import { requireAuthentication } from "../auth/auth.middleware.js";
-import { invitationTokenParamsSchema } from "./trip.schemas.js";
+import {
+  invitationIdParamsSchema,
+  invitationTokenParamsSchema,
+} from "./trip.schemas.js";
 import {
   getInvitationByToken,
   InvitationEmailMismatchError,
   InvitationNotFoundError,
   InvitationUnavailableError,
+  listUserInvitations,
   respondToInvitation,
+  respondToInvitationById,
 } from "./invitation.service.js";
 
 export const invitationRouter = Router();
@@ -39,6 +44,15 @@ const sendInvitationError = (
   }
   next(error);
 };
+
+invitationRouter.get("/", requireAuthentication, async (_request, response, next) => {
+  try {
+    const invitations = await listUserInvitations(response.locals.user.email);
+    response.status(200).json({ data: { invitations } });
+  } catch (error) {
+    next(error);
+  }
+});
 
 invitationRouter.get("/:token", async (request, response, next) => {
   const params = readToken(request.params);
@@ -82,6 +96,43 @@ const respond = (decision: "ACCEPTED" | "DECLINED") =>
       sendInvitationError(error, response, next);
     }
   };
+
+const respondFromDashboard = (decision: "ACCEPTED" | "DECLINED") =>
+  async (
+    request: Parameters<Parameters<typeof invitationRouter.post>[1]>[0],
+    response: Parameters<Parameters<typeof invitationRouter.post>[1]>[1],
+    next: (error?: unknown) => void,
+  ) => {
+    const params = invitationIdParamsSchema.safeParse(request.params);
+    if (!params.success) {
+      response.status(400).json({
+        error: { code: "INVALID_INVITATION_ID", message: "Invitation ID is invalid" },
+      });
+      return;
+    }
+
+    try {
+      const result = await respondToInvitationById(
+        params.data.invitationId,
+        response.locals.user,
+        decision,
+      );
+      response.status(200).json({ data: result });
+    } catch (error) {
+      sendInvitationError(error, response, next);
+    }
+  };
+
+invitationRouter.post(
+  "/inbox/:invitationId/accept",
+  requireAuthentication,
+  respondFromDashboard("ACCEPTED"),
+);
+invitationRouter.post(
+  "/inbox/:invitationId/decline",
+  requireAuthentication,
+  respondFromDashboard("DECLINED"),
+);
 
 invitationRouter.post("/:token/accept", requireAuthentication, respond("ACCEPTED"));
 invitationRouter.post("/:token/decline", requireAuthentication, respond("DECLINED"));

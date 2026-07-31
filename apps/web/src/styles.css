@@ -402,6 +402,76 @@ h2 {
   margin-bottom: 0;
 }
 
+.section-heading {
+  margin-bottom: 28px;
+}
+
+.section-heading h2 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  margin-bottom: 0;
+}
+
+.dashboard-invitations {
+  background: #e2eadf;
+  border: 1px solid #c8d5c9;
+  border-radius: 28px;
+  margin-bottom: 52px;
+  padding: clamp(24px, 5vw, 44px);
+}
+
+.dashboard-invitation-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-invitation-card {
+  background: #fffdf7;
+  border: 1px solid #d1d7cf;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  justify-content: space-between;
+  padding: 24px;
+}
+
+.dashboard-invitation-card h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  margin: 24px 0 8px;
+}
+
+.dashboard-invitation-card p {
+  color: #556058;
+  margin-bottom: 8px;
+}
+
+.dashboard-invitation-card .trip-destination {
+  color: #132019;
+  font-weight: 750;
+}
+
+.invitation-label {
+  color: #68726b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-invitation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.your-trips-heading {
+  margin-top: 16px;
+}
+
 .status-message {
   color: #556058;
   padding: 36px 0;
@@ -744,6 +814,7 @@ h2 {
   }
 
   .trip-grid,
+  .dashboard-invitation-grid,
   .form-page-content,
   .overview-grid {
     grid-template-columns: 1fr;

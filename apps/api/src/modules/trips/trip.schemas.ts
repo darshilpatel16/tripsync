@@ -76,6 +76,10 @@ export const invitationTokenParamsSchema = z.object({
   token: z.string().min(32, "Invitation token is invalid"),
 });
 
+export const invitationIdParamsSchema = z.object({
+  invitationId: z.string().uuid("Invitation ID must be a valid UUID"),
+});
+
 export const memberParamsSchema = z.object({
   tripId: z.string().uuid("Trip ID must be a valid UUID"),
   userId: z.string().uuid("User ID must be a valid UUID"),

@@ -61,6 +61,49 @@ describe("invitation routes", () => {
     ]);
   });
 
+  it("lists and accepts an invitation from the signed-in user's dashboard", async () => {
+    const ownerAgent = await signedInAgent(ownerEmail, "Dashboard Owner");
+    const tripResponse = await ownerAgent.post("/api/trips").send({
+      name: "Dashboard Invitation Trip",
+      destination: "Edinburgh",
+      startDate: "2026-12-04",
+      endDate: "2026-12-07",
+      currency: "GBP",
+    });
+    const tripId = tripResponse.body.data.trip.id;
+
+    const createResponse = await ownerAgent
+      .post(`/api/trips/${tripId}/invitations`)
+      .send({ email: inviteeEmail });
+    const invitationId = createResponse.body.data.invitation.id;
+    const inviteeAgent = await signedInAgent(inviteeEmail, "Dashboard Invitee");
+
+    const inboxResponse = await inviteeAgent.get("/api/invitations");
+    expect(inboxResponse.status).toBe(200);
+    expect(inboxResponse.body.data.invitations).toEqual([
+      expect.objectContaining({
+        id: invitationId,
+        email: inviteeEmail,
+        status: "PENDING",
+        trip: expect.objectContaining({ id: tripId, name: "Dashboard Invitation Trip" }),
+      }),
+    ]);
+    expect(inboxResponse.body.data.invitations[0]).not.toHaveProperty("tokenHash");
+
+    const acceptResponse = await inviteeAgent.post(
+      `/api/invitations/inbox/${invitationId}/accept`,
+    );
+    expect(acceptResponse.status).toBe(200);
+    expect(acceptResponse.body.data).toMatchObject({ tripId, status: "ACCEPTED" });
+
+    const refreshedInbox = await inviteeAgent.get("/api/invitations");
+    expect(refreshedInbox.body.data.invitations).toEqual([]);
+    const inviteeTrips = await inviteeAgent.get("/api/trips");
+    expect(inviteeTrips.body.data.trips).toEqual([
+      expect.objectContaining({ id: tripId, role: "MEMBER" }),
+    ]);
+  });
+
   it("prevents a member from creating invitations", async () => {
     const response = await request(app)
       .post("/api/trips/11111111-1111-4111-8111-111111111111/invitations")
