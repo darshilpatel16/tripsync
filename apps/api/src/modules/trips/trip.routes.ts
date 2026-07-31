@@ -3,14 +3,24 @@ import { Router } from "express";
 import { requireAuthentication } from "../auth/auth.middleware.js";
 import {
   createTripBodySchema,
+  invitationBodySchema,
+  memberParamsSchema,
   tripIdParamsSchema,
   updateTripBodySchema,
 } from "./trip.schemas.js";
 import {
+  AlreadyTripMemberError,
+  createTripInvitation,
+  listTripInvitations,
+} from "./invitation.service.js";
+import {
+  CannotRemoveTripOwnerError,
   createTrip,
   deleteTrip,
   getTrip,
   listTrips,
+  leaveTrip,
+  removeTripMember,
   TripNotFoundError,
   TripOwnerRequiredError,
   updateTrip,
@@ -51,6 +61,18 @@ const handleTripError = (
   if (error instanceof TripOwnerRequiredError) {
     response.status(403).json({
       error: { code: "TRIP_OWNER_REQUIRED", message: error.message },
+    });
+    return;
+  }
+  if (error instanceof CannotRemoveTripOwnerError) {
+    response.status(409).json({
+      error: { code: "TRIP_OWNER_CANNOT_LEAVE", message: error.message },
+    });
+    return;
+  }
+  if (error instanceof AlreadyTripMemberError) {
+    response.status(409).json({
+      error: { code: "ALREADY_TRIP_MEMBER", message: error.message },
     });
     return;
   }
@@ -135,6 +157,82 @@ tripRouter.delete("/:tripId", async (request, response, next) => {
 
   try {
     await deleteTrip(response.locals.user.id, params.data.tripId);
+    response.status(204).send();
+  } catch (error) {
+    handleTripError(error, response, next);
+  }
+});
+
+tripRouter.post("/:tripId/invitations", async (request, response, next) => {
+  const params = tripIdParamsSchema.safeParse(request.params);
+  const body = invitationBodySchema.safeParse(request.body);
+  if (!params.success || !body.success) {
+    const issues = [
+      ...(params.success ? [] : params.error.issues),
+      ...(body.success ? [] : body.error.issues),
+    ];
+    sendValidationError(response, "The invitation information is invalid", issues);
+    return;
+  }
+
+  try {
+    const result = await createTripInvitation(
+      response.locals.user.id,
+      params.data.tripId,
+      body.data.email,
+    );
+    response.status(201).json({ data: result });
+  } catch (error) {
+    handleTripError(error, response, next);
+  }
+});
+
+tripRouter.get("/:tripId/invitations", async (request, response, next) => {
+  const params = tripIdParamsSchema.safeParse(request.params);
+  if (!params.success) {
+    sendValidationError(response, "The trip ID is invalid", params.error.issues);
+    return;
+  }
+
+  try {
+    const invitations = await listTripInvitations(
+      response.locals.user.id,
+      params.data.tripId,
+    );
+    response.status(200).json({ data: { invitations } });
+  } catch (error) {
+    handleTripError(error, response, next);
+  }
+});
+
+tripRouter.delete("/:tripId/members/:userId", async (request, response, next) => {
+  const params = memberParamsSchema.safeParse(request.params);
+  if (!params.success) {
+    sendValidationError(response, "The member information is invalid", params.error.issues);
+    return;
+  }
+
+  try {
+    await removeTripMember(
+      response.locals.user.id,
+      params.data.tripId,
+      params.data.userId,
+    );
+    response.status(204).send();
+  } catch (error) {
+    handleTripError(error, response, next);
+  }
+});
+
+tripRouter.post("/:tripId/leave", async (request, response, next) => {
+  const params = tripIdParamsSchema.safeParse(request.params);
+  if (!params.success) {
+    sendValidationError(response, "The trip ID is invalid", params.error.issues);
+    return;
+  }
+
+  try {
+    await leaveTrip(response.locals.user.id, params.data.tripId);
     response.status(204).send();
   } catch (error) {
     handleTripError(error, response, next);

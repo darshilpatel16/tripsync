@@ -62,5 +62,25 @@ export const tripIdParamsSchema = z.object({
   tripId: z.string().uuid("Trip ID must be a valid UUID"),
 });
 
+export const invitationBodySchema = z
+  .object({
+    email: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .email("Enter a valid email address"),
+  })
+  .strict();
+
+export const invitationTokenParamsSchema = z.object({
+  token: z.string().min(32, "Invitation token is invalid"),
+});
+
+export const memberParamsSchema = z.object({
+  tripId: z.string().uuid("Trip ID must be a valid UUID"),
+  userId: z.string().uuid("User ID must be a valid UUID"),
+});
+
 export type CreateTripBody = z.infer<typeof createTripBodySchema>;
 export type UpdateTripBody = z.infer<typeof updateTripBodySchema>;
+export type InvitationBody = z.infer<typeof invitationBodySchema>;

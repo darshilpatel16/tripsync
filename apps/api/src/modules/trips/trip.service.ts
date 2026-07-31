@@ -127,7 +127,7 @@ export const getTrip = async (userId: string, tripId: string) => {
   };
 };
 
-const requireTripOwner = async (userId: string, tripId: string) => {
+export const requireTripOwner = async (userId: string, tripId: string) => {
   const membership = await prisma.tripMember.findUnique({
     where: { tripId_userId: { tripId, userId } },
     select: { role: true },
@@ -181,4 +181,53 @@ export const updateTrip = async (
 export const deleteTrip = async (userId: string, tripId: string) => {
   await requireTripOwner(userId, tripId);
   await prisma.trip.delete({ where: { id: tripId } });
+};
+
+export class CannotRemoveTripOwnerError extends Error {
+  constructor() {
+    super("The trip owner cannot be removed or leave the trip");
+    this.name = "CannotRemoveTripOwnerError";
+  }
+}
+
+export const removeTripMember = async (
+  ownerId: string,
+  tripId: string,
+  memberUserId: string,
+) => {
+  await requireTripOwner(ownerId, tripId);
+
+  const membership = await prisma.tripMember.findUnique({
+    where: { tripId_userId: { tripId, userId: memberUserId } },
+    select: { role: true },
+  });
+
+  if (!membership) {
+    throw new TripNotFoundError();
+  }
+  if (membership.role === "OWNER") {
+    throw new CannotRemoveTripOwnerError();
+  }
+
+  await prisma.tripMember.delete({
+    where: { tripId_userId: { tripId, userId: memberUserId } },
+  });
+};
+
+export const leaveTrip = async (userId: string, tripId: string) => {
+  const membership = await prisma.tripMember.findUnique({
+    where: { tripId_userId: { tripId, userId } },
+    select: { role: true },
+  });
+
+  if (!membership) {
+    throw new TripNotFoundError();
+  }
+  if (membership.role === "OWNER") {
+    throw new CannotRemoveTripOwnerError();
+  }
+
+  await prisma.tripMember.delete({
+    where: { tripId_userId: { tripId, userId } },
+  });
 };

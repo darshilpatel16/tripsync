@@ -34,3 +34,29 @@ export type CreateTripInput = {
   endDate: string;
   currency: string;
 };
+
+export type InvitationStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+
+export type TripInvitation = {
+  id: string;
+  email: string;
+  status: InvitationStatus;
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type InvitationDetail = TripInvitation & {
+  trip: {
+    id: string;
+    name: string;
+    destination: string;
+    startDate: string;
+    endDate: string;
+  };
+  invitedBy: {
+    id: string;
+    displayName: string;
+  };
+};
+
+export type EmailDelivery = "SENT" | "DEVELOPMENT" | "FAILED";

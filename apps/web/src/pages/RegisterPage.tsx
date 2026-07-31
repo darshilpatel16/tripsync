@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 
 import { ApiError, apiRequest } from "../lib/api";
 
@@ -31,8 +31,13 @@ const initialValues: FormValues = {
 };
 
 export function RegisterPage() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [values, setValues] = useState(initialValues);
+  const locationState = location.state as { email?: string; returnTo?: string } | null;
+  const [values, setValues] = useState({
+    ...initialValues,
+    email: locationState?.email ?? "",
+  });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,6 +85,7 @@ export function RegisterPage() {
         state: {
           email: response.data.user.email,
           registered: true,
+          returnTo: locationState?.returnTo,
         },
       });
     } catch (error) {

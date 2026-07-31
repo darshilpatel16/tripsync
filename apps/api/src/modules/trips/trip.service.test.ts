@@ -5,10 +5,13 @@ import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "../../lib/prisma.js";
 import { registerUser } from "../auth/auth.service.js";
 import {
+  CannotRemoveTripOwnerError,
   createTrip,
   deleteTrip,
   getTrip,
+  leaveTrip,
   listTrips,
+  removeTripMember,
   TripNotFoundError,
   TripOwnerRequiredError,
   updateTrip,
@@ -111,5 +114,36 @@ describe("trip service", () => {
 
     await deleteTrip(ownerId, trip.id);
     await expect(prisma.trip.findUnique({ where: { id: trip.id } })).resolves.toBeNull();
+  });
+
+  it("allows an owner to remove a member but never the trip owner", async () => {
+    const trip = await createTrip(ownerId, tripInput);
+    await prisma.tripMember.create({
+      data: { tripId: trip.id, userId: memberId, role: "MEMBER" },
+    });
+
+    await removeTripMember(ownerId, trip.id, memberId);
+    await expect(
+      prisma.tripMember.findUnique({
+        where: { tripId_userId: { tripId: trip.id, userId: memberId } },
+      }),
+    ).resolves.toBeNull();
+
+    await expect(removeTripMember(ownerId, trip.id, ownerId)).rejects.toBeInstanceOf(
+      CannotRemoveTripOwnerError,
+    );
+  });
+
+  it("allows a member to leave but requires the owner to keep ownership", async () => {
+    const trip = await createTrip(ownerId, tripInput);
+    await prisma.tripMember.create({
+      data: { tripId: trip.id, userId: memberId, role: "MEMBER" },
+    });
+
+    await leaveTrip(memberId, trip.id);
+    await expect(getTrip(memberId, trip.id)).rejects.toBeInstanceOf(TripNotFoundError);
+    await expect(leaveTrip(ownerId, trip.id)).rejects.toBeInstanceOf(
+      CannotRemoveTripOwnerError,
+    );
   });
 });

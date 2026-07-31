@@ -547,6 +547,123 @@ h2 {
   font-size: 0.85rem;
 }
 
+.member-actions {
+  align-items: end;
+  display: flex !important;
+  gap: 8px !important;
+}
+
+.text-button {
+  background: transparent;
+  border-radius: 0;
+  color: #173f2e;
+  font-size: 0.82rem;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.text-button:hover {
+  background: transparent;
+}
+
+.danger-text,
+.danger-text:hover {
+  color: #9c3325;
+}
+
+.invite-card {
+  align-self: start;
+}
+
+.invite-form {
+  display: grid;
+  gap: 16px;
+}
+
+.invitation-result {
+  background: #e0efe7;
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px;
+}
+
+.invitation-result input {
+  border: 1px solid #aeb6af;
+  border-radius: 8px;
+  font: inherit;
+  padding: 10px;
+  width: 100%;
+}
+
+.invitation-list {
+  border-top: 1px solid #d8d8ce;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+.invitation-list h3 {
+  font-size: 1rem;
+}
+
+.invitation-row {
+  align-items: center;
+  border-top: 1px solid #e5e5dc;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.invitation-row strong {
+  color: #68726b;
+  text-transform: capitalize;
+}
+
+.invitation-page {
+  min-height: 100vh;
+}
+
+.invitation-card {
+  background: #fffdf7;
+  border: 1px solid #d8d8ce;
+  border-radius: 28px;
+  box-shadow: 0 24px 70px rgb(23 63 46 / 10%);
+  margin: 60px auto 100px;
+  max-width: 760px;
+  padding: clamp(28px, 6vw, 64px);
+}
+
+.invitation-card h1 {
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
+.invitation-facts {
+  border-bottom: 1px solid #d8d8ce;
+  border-top: 1px solid #d8d8ce;
+  display: flex;
+  flex-wrap: wrap;
+  font-weight: 750;
+  gap: 12px;
+  margin: 32px 0;
+  padding: 20px 0;
+}
+
+.invitation-actions {
+  align-items: start;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.invitation-button-row {
+  align-items: center;
+  flex-direction: row;
+}
+
 .danger-zone {
   align-items: center;
   border: 1px solid #dfb4ab;
@@ -617,6 +734,11 @@ h2 {
 
   .dashboard-heading,
   .danger-zone {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .invitation-button-row {
     align-items: stretch;
     flex-direction: column;
   }
