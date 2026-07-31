@@ -1,9 +1,10 @@
-import { Router } from "express";
-
+import { Router, type CookieOptions } from "express";
 import { env } from "../../config/env.js";
 
 import {
   createSession,
+  deleteSession,
+  findUserBySessionToken,
   SESSION_COOKIE_NAME,
 } from "./session.service.js";
 
@@ -20,6 +21,13 @@ import {
 } from "./auth.service.js";
 
 export const authRouter = Router();
+
+const sessionCookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+};
 
 authRouter.post("/register", async (request, response, next) => {
   const validationResult = registerBodySchema.safeParse(request.body);
@@ -83,17 +91,14 @@ authRouter.post("/login", async (request, response, next) => {
 
   try {
     const user = await loginUser(validationResult.data);
-const session = await createSession(user.id);
+    const session = await createSession(user.id);
 
-response.cookie(SESSION_COOKIE_NAME, session.token, {
-  httpOnly: true,
-  secure: env.NODE_ENV === "production",
-  sameSite: "lax",
-  expires: session.expiresAt,
-  path: "/",
-});
+    response.cookie(SESSION_COOKIE_NAME, session.token, {
+      ...sessionCookieOptions,
+      expires: session.expiresAt,
+    });
 
-response.status(200).json({
+    response.status(200).json({
       data: {
         user,
       },
@@ -110,6 +115,61 @@ response.status(200).json({
       return;
     }
 
+    next(error);
+  }
+});
+
+authRouter.get("/me", async (request, response, next) => {
+  const sessionToken = request.cookies[SESSION_COOKIE_NAME];
+
+  if (typeof sessionToken !== "string") {
+    response.status(401).json({
+      error: {
+        code: "AUTHENTICATION_REQUIRED",
+        message: "You must be signed in",
+      },
+    });
+
+    return;
+  }
+
+  try {
+    const user = await findUserBySessionToken(sessionToken);
+
+    if (!user) {
+      response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions);
+
+      response.status(401).json({
+        error: {
+          code: "AUTHENTICATION_REQUIRED",
+          message: "You must be signed in",
+        },
+      });
+
+      return;
+    }
+
+    response.status(200).json({
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post("/logout", async (request, response, next) => {
+  const sessionToken = request.cookies[SESSION_COOKIE_NAME];
+
+  try {
+    if (typeof sessionToken === "string") {
+      await deleteSession(sessionToken);
+    }
+
+    response.clearCookie(SESSION_COOKIE_NAME, sessionCookieOptions);
+    response.status(204).send();
+  } catch (error) {
     next(error);
   }
 });

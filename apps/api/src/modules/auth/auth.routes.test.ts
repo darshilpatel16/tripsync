@@ -139,3 +139,59 @@ describe("POST /api/auth/login", () => {
     expect(response.body.error.code).toBe("INVALID_CREDENTIALS");
   });
 });
+describe("authenticated session routes", () => {
+  const registration = {
+    displayName: "TripSync Session Route Test",
+    email: testEmail,
+    password: "correct horse battery staple",
+  };
+
+  it("returns the signed-in user and rejects access after logout", async () => {
+    const agent = request.agent(app);
+
+    await agent.post("/api/auth/register").send(registration);
+
+    const loginResponse = await agent.post("/api/auth/login").send({
+      email: registration.email,
+      password: registration.password,
+    });
+
+    expect(loginResponse.status).toBe(200);
+
+    const currentUserResponse = await agent.get("/api/auth/me");
+
+    expect(currentUserResponse.status).toBe(200);
+    expect(currentUserResponse.body.data.user).toMatchObject({
+      displayName: registration.displayName,
+      email: registration.email,
+    });
+
+    const logoutResponse = await agent.post("/api/auth/logout");
+
+    expect(logoutResponse.status).toBe(204);
+
+    await expect(
+      prisma.session.count({
+        where: {
+          userId: loginResponse.body.data.user.id,
+        },
+      }),
+    ).resolves.toBe(0);
+
+    const afterLogoutResponse = await agent.get("/api/auth/me");
+
+    expect(afterLogoutResponse.status).toBe(401);
+    expect(afterLogoutResponse.body.error.code).toBe(
+      "AUTHENTICATION_REQUIRED",
+    );
+  });
+
+  it("returns 401 when no session cookie is provided", async () => {
+    const response = await request(app).get("/api/auth/me");
+
+    expect(response.status).toBe(401);
+    expect(response.body.error.code).toBe(
+      "AUTHENTICATION_REQUIRED",
+    );
+  });
+});
