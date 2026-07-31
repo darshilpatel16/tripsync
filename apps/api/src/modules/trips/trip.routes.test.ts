@@ -78,4 +78,33 @@ describe("trip routes", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("updates a trip owned by the signed-in user", async () => {
+    const agent = await createSignedInAgent();
+    const createResponse = await agent.post("/api/trips").send({
+      name: "Original trip",
+      destination: "London",
+      startDate: "2026-10-10",
+      endDate: "2026-10-12",
+      currency: "GBP",
+    });
+    const tripId = createResponse.body.data.trip.id;
+
+    const updateResponse = await agent.patch(`/api/trips/${tripId}`).send({
+      name: "Updated city break",
+      destination: "Bath",
+      startDate: "2026-10-11",
+      endDate: "2026-10-14",
+      currency: "EUR",
+    });
+
+    expect(updateResponse.status).toBe(200);
+    expect(updateResponse.body.data.trip).toMatchObject({
+      id: tripId,
+      name: "Updated city break",
+      destination: "Bath",
+      currency: "EUR",
+      role: "OWNER",
+    });
+  });
 });

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthContext } from "./auth/auth-context";
 import { CreateTripPage } from "./pages/CreateTripPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { EditTripPage } from "./pages/EditTripPage";
 import * as tripApi from "./trips/trip-api";
 
 vi.mock("./trips/trip-api");
@@ -84,6 +85,42 @@ describe("trip frontend flow", () => {
         currency: "EUR",
       });
       expect(screen.getByRole("heading", { name: /trip overview reached/i })).toBeInTheDocument();
+    });
+  });
+
+  it("prefills and updates a trip for its owner", async () => {
+    vi.mocked(tripApi.getTrip).mockResolvedValue({ ...trip, members: [] });
+    vi.mocked(tripApi.updateTrip).mockResolvedValue({
+      ...trip,
+      name: "Italian Adventure",
+    });
+
+    render(
+      <MemoryRouter initialEntries={[`/trips/${trip.id}/edit`]}>
+        <Routes>
+          <Route path="/trips/:tripId/edit" element={<EditTripPage />} />
+          <Route path="/trips/:tripId" element={<h1>Updated trip opened</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const nameInput = await screen.findByLabelText(/trip name/i);
+    expect(nameInput).toHaveValue(trip.name);
+    expect(screen.getByLabelText(/destination/i)).toHaveValue(trip.destination);
+    expect(screen.getByLabelText(/start date/i)).toHaveValue("2026-09-10");
+
+    fireEvent.change(nameInput, { target: { value: "Italian Adventure" } });
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(tripApi.updateTrip).toHaveBeenCalledWith(trip.id, {
+        name: "Italian Adventure",
+        destination: trip.destination,
+        startDate: "2026-09-10",
+        endDate: "2026-09-17",
+        currency: "EUR",
+      });
+      expect(screen.getByRole("heading", { name: /updated trip opened/i })).toBeInTheDocument();
     });
   });
 

@@ -564,6 +564,27 @@ h2 {
   padding-bottom: 48px;
 }
 
+.trip-hero-heading {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.trip-hero-heading .eyebrow {
+  margin-bottom: 0;
+}
+
+.edit-trip-link {
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.edit-trip-link:hover {
+  background: #173f2e;
+  color: white;
+}
+
 .trip-facts {
   display: flex;
   flex-wrap: wrap;
@@ -803,6 +824,7 @@ h2 {
   }
 
   .dashboard-heading,
+  .trip-hero-heading,
   .danger-zone {
     align-items: stretch;
     flex-direction: column;

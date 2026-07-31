@@ -31,6 +31,14 @@ export const getTrip = async (tripId: string) => {
   return response.data.trip;
 };
 
+export const updateTrip = async (tripId: string, input: CreateTripInput) => {
+  const response = await apiRequest<{ data: { trip: TripSummary } }>(
+    `/trips/${tripId}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+  );
+  return response.data.trip;
+};
+
 export const deleteTrip = (tripId: string) =>
   apiRequest<void>(`/trips/${tripId}`, { method: "DELETE" });
 

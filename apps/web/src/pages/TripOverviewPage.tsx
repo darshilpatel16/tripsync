@@ -147,7 +147,12 @@ export function TripOverviewPage() {
       </nav>
       <section className="trip-overview">
         <div className="trip-hero">
-          <p className="eyebrow">{trip.role === "OWNER" ? "You are organising" : "Group trip"}</p>
+          <div className="trip-hero-heading">
+            <p className="eyebrow">{trip.role === "OWNER" ? "You are organising" : "Group trip"}</p>
+            {trip.role === "OWNER" ? (
+              <Link className="secondary-button edit-trip-link" to={`/trips/${trip.id}/edit`}>Edit trip</Link>
+            ) : null}
+          </div>
           <h1>{trip.name}</h1>
           <p className="lede">{trip.destination}</p>
           <div className="trip-facts">
