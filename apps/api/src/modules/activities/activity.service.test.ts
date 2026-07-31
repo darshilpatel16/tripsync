@@ -7,9 +7,11 @@ import { registerUser } from "../auth/auth.service.js";
 import { createTrip, TripNotFoundError } from "../trips/trip.service.js";
 import {
   ActivityEditorRequiredError,
+  addActivityVote,
   createActivity,
   deleteActivity,
   listActivities,
+  removeActivityVote,
   updateActivity,
   updateActivityStatus,
 } from "./activity.service.js";
@@ -142,5 +144,29 @@ describe("activity service", () => {
       title: "Confirmed group proposal",
     });
     expect(ownerEdit.title).toBe("Confirmed group proposal");
+  });
+
+  it("shows which trip members voted and which members are still waiting", async () => {
+    const activity = await createActivity(creatorId, tripId, {
+      title: "Group food tour",
+    });
+
+    const voted = await addActivityVote(ownerId, tripId, activity.id);
+    expect(voted.voting).toEqual({
+      voted: [{ id: ownerId, displayName: "Activity Owner" }],
+      notVoted: [{ id: creatorId, displayName: "Activity Creator" }],
+      currentUserVoted: true,
+    });
+
+    const memberView = await listActivities(creatorId, tripId);
+    expect(memberView).toHaveLength(1);
+    expect(memberView[0]!.voting.currentUserVoted).toBe(false);
+    expect(memberView[0]!.voting.voted).toEqual([
+      { id: ownerId, displayName: "Activity Owner" },
+    ]);
+
+    const removed = await removeActivityVote(ownerId, tripId, activity.id);
+    expect(removed.voting.voted).toEqual([]);
+    expect(removed.voting.notVoted).toHaveLength(2);
   });
 });

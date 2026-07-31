@@ -17,6 +17,16 @@ export type Activity = {
     id: string;
     displayName: string;
   };
+  voting: {
+    voted: ActivityVoter[];
+    notVoted: ActivityVoter[];
+    currentUserVoted: boolean;
+  };
+};
+
+export type ActivityVoter = {
+  id: string;
+  displayName: string;
 };
 
 export type ActivityInput = {

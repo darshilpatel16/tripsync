@@ -24,6 +24,11 @@ const activity: Activity = {
     id: ownerId,
     displayName: "Darshil Test",
   },
+  voting: {
+    voted: [],
+    notVoted: [{ id: ownerId, displayName: "Darshil Test" }],
+    currentUserVoted: false,
+  },
 };
 
 beforeEach(() => {
@@ -140,5 +145,45 @@ describe("itinerary activity flow", () => {
       expect(activityApi.deleteActivity).toHaveBeenCalledWith(tripId, activity.id);
     });
     expect(await screen.findByText(/no activities yet/i)).toBeInTheDocument();
+  });
+
+  it("shows who voted, who is waiting, and lets the user change their vote", async () => {
+    const votedActivity: Activity = {
+      ...activity,
+      voting: {
+        voted: [{ id: ownerId, displayName: "Darshil Test" }],
+        notVoted: [{ id: "member-2", displayName: "Aisha Traveller" }],
+        currentUserVoted: true,
+      },
+    };
+    const removedVoteActivity: Activity = {
+      ...activity,
+      voting: {
+        voted: [],
+        notVoted: [
+          { id: ownerId, displayName: "Darshil Test" },
+          { id: "member-2", displayName: "Aisha Traveller" },
+        ],
+        currentUserVoted: false,
+      },
+    };
+    vi.mocked(activityApi.listActivities)
+      .mockResolvedValueOnce([votedActivity])
+      .mockResolvedValueOnce([removedVoteActivity]);
+    vi.mocked(activityApi.removeActivityVote).mockResolvedValue(removedVoteActivity);
+
+    render(
+      <ActivitySection currentUserId={ownerId} tripId={tripId} tripRole="MEMBER" />,
+    );
+
+    fireEvent.click(await screen.findByText(/1 voted · 1 waiting/i));
+    expect(screen.getByText("Darshil Test")).toBeInTheDocument();
+    expect(screen.getByText("Aisha Traveller")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /remove my vote/i }));
+    await waitFor(() => {
+      expect(activityApi.removeActivityVote).toHaveBeenCalledWith(tripId, activity.id);
+    });
+    expect(await screen.findByRole("button", { name: /i'm interested/i })).toBeInTheDocument();
   });
 });

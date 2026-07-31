@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { ApiError } from "../lib/api";
 import {
+  addActivityVote,
   createActivity,
   deleteActivity,
   listActivities,
+  removeActivityVote,
   updateActivity,
   updateActivityStatus,
 } from "./activity-api";
@@ -284,6 +286,23 @@ export function ActivitySection({
     }
   };
 
+  const handleVote = async (activity: Activity) => {
+    setErrorMessage("");
+    setWorkingId(activity.id);
+    try {
+      if (activity.voting.currentUserVoted) {
+        await removeActivityVote(tripId, activity.id);
+      } else {
+        await addActivityVote(tripId, activity.id);
+      }
+      await loadActivities();
+    } catch (error) {
+      showError(error, "TripSync could not update your vote.");
+    } finally {
+      setWorkingId(null);
+    }
+  };
+
   return (
     <section className="itinerary-section" aria-labelledby="itinerary-heading">
       <div className="itinerary-heading">
@@ -356,6 +375,40 @@ export function ActivitySection({
                 <p className="activity-schedule">{formatSchedule(activity)}</p>
                 {activity.location ? <p className="activity-location">{activity.location}</p> : null}
                 {activity.description ? <p className="activity-description">{activity.description}</p> : null}
+                <div className="activity-voting">
+                  <button
+                    aria-pressed={activity.voting.currentUserVoted}
+                    className={activity.voting.currentUserVoted ? "vote-button vote-button-active" : "vote-button"}
+                    disabled={isWorking}
+                    onClick={() => void handleVote(activity)}
+                    type="button"
+                  >
+                    {activity.voting.currentUserVoted ? "Remove my vote" : "I'm interested"}
+                  </button>
+                  <details className="vote-details">
+                    <summary>
+                      {activity.voting.voted.length} voted · {activity.voting.notVoted.length} waiting
+                    </summary>
+                    <div className="vote-groups">
+                      <div>
+                        <strong>Voted</strong>
+                        {activity.voting.voted.length ? (
+                          <ul>
+                            {activity.voting.voted.map((person) => <li key={person.id}>{person.displayName}</li>)}
+                          </ul>
+                        ) : <p>No votes yet</p>}
+                      </div>
+                      <div>
+                        <strong>Waiting for vote</strong>
+                        {activity.voting.notVoted.length ? (
+                          <ul>
+                            {activity.voting.notVoted.map((person) => <li key={person.id}>{person.displayName}</li>)}
+                          </ul>
+                        ) : <p>Everyone has voted</p>}
+                      </div>
+                    </div>
+                  </details>
+                </div>
                 <div className="activity-actions">
                   {tripRole === "OWNER" && activity.status !== "CONFIRMED" ? (
                     <button disabled={isWorking} onClick={() => void handleStatus(activity, "CONFIRMED")} type="button">Confirm</button>

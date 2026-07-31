@@ -1,4 +1,4 @@
-import type { ActivityStatus, TripRole } from "@prisma/client";
+import type { ActivityStatus, Prisma, TripRole } from "@prisma/client";
 
 import { prisma } from "../../lib/prisma.js";
 import { TripNotFoundError, requireTripOwner } from "../trips/trip.service.js";
@@ -42,7 +42,48 @@ const activitySelection = {
   createdBy: {
     select: { id: true, displayName: true },
   },
+  votes: {
+    select: {
+      value: true,
+      user: { select: { id: true, displayName: true } },
+    },
+  },
+  trip: {
+    select: {
+      members: {
+        select: {
+          user: { select: { id: true, displayName: true } },
+        },
+        orderBy: { joinedAt: "asc" },
+      },
+    },
+  },
 } as const;
+
+type SelectedActivity = Prisma.ActivityGetPayload<{
+  select: typeof activitySelection;
+}>;
+
+const presentActivity = (activity: SelectedActivity, currentUserId: string) => {
+  const { votes, trip, ...details } = activity;
+  const memberUsers = trip.members.map((member) => member.user);
+  const memberUserIds = new Set(memberUsers.map((user) => user.id));
+  const activeVotes = votes.filter(
+    (vote) => vote.value === "UP" && memberUserIds.has(vote.user.id),
+  );
+  const votedUserIds = new Set(
+    activeVotes.map((vote) => vote.user.id),
+  );
+
+  return {
+    ...details,
+    voting: {
+      voted: activeVotes.map((vote) => vote.user),
+      notVoted: memberUsers.filter((user) => !votedUserIds.has(user.id)),
+      currentUserVoted: votedUserIds.has(currentUserId),
+    },
+  };
+};
 
 const requireTripMember = async (userId: string, tripId: string) => {
   const membership = await prisma.tripMember.findUnique({
@@ -95,7 +136,7 @@ export const createActivity = async (
 ) => {
   await requireTripMember(userId, tripId);
 
-  return prisma.activity.create({
+  const activity = await prisma.activity.create({
     data: {
       tripId,
       createdById: userId,
@@ -107,16 +148,18 @@ export const createActivity = async (
     },
     select: activitySelection,
   });
+  return presentActivity(activity, userId);
 };
 
 export const listActivities = async (userId: string, tripId: string) => {
   await requireTripMember(userId, tripId);
 
-  return prisma.activity.findMany({
+  const activities = await prisma.activity.findMany({
     where: { tripId },
     orderBy: [{ startsAt: "asc" }, { createdAt: "asc" }],
     select: activitySelection,
   });
+  return activities.map((activity) => presentActivity(activity, userId));
 };
 
 export const updateActivity = async (
@@ -140,7 +183,7 @@ export const updateActivity = async (
     throw new ActivityScheduleError();
   }
 
-  return prisma.activity.update({
+  const activity = await prisma.activity.update({
     where: { id: activityId },
     data: {
       ...(input.title !== undefined ? { title: input.title } : {}),
@@ -151,6 +194,7 @@ export const updateActivity = async (
     },
     select: activitySelection,
   });
+  return presentActivity(activity, userId);
 };
 
 export const updateActivityStatus = async (
@@ -162,11 +206,50 @@ export const updateActivityStatus = async (
   await requireTripOwner(userId, tripId);
   await findActivity(tripId, activityId);
 
-  return prisma.activity.update({
+  const activity = await prisma.activity.update({
     where: { id: activityId },
     data: { status },
     select: activitySelection,
   });
+  return presentActivity(activity, userId);
+};
+
+export const addActivityVote = async (
+  userId: string,
+  tripId: string,
+  activityId: string,
+) => {
+  await requireTripMember(userId, tripId);
+  await findActivity(tripId, activityId);
+
+  await prisma.activityVote.upsert({
+    where: { activityId_userId: { activityId, userId } },
+    create: { activityId, userId, value: "UP" },
+    update: { value: "UP" },
+  });
+
+  const activity = await prisma.activity.findUniqueOrThrow({
+    where: { id: activityId },
+    select: activitySelection,
+  });
+  return presentActivity(activity, userId);
+};
+
+export const removeActivityVote = async (
+  userId: string,
+  tripId: string,
+  activityId: string,
+) => {
+  await requireTripMember(userId, tripId);
+  await findActivity(tripId, activityId);
+
+  await prisma.activityVote.deleteMany({ where: { activityId, userId } });
+
+  const activity = await prisma.activity.findUniqueOrThrow({
+    where: { id: activityId },
+    select: activitySelection,
+  });
+  return presentActivity(activity, userId);
 };
 
 export const deleteActivity = async (

@@ -126,4 +126,31 @@ describe("activity routes", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("lets members add and remove their activity vote", async () => {
+    const { owner, member, tripId } = await createTripWithMember();
+    const createResponse = await owner.agent
+      .post(`/api/trips/${tripId}/activities`)
+      .send({ title: "Evening food tour" });
+    const activityId = createResponse.body.data.activity.id as string;
+
+    const voteResponse = await member.agent.post(
+      `/api/trips/${tripId}/activities/${activityId}/vote`,
+    );
+    expect(voteResponse.status).toBe(200);
+    expect(voteResponse.body.data.activity.voting).toMatchObject({
+      currentUserVoted: true,
+      voted: [{ id: member.userId, displayName: "Activity Route Member" }],
+    });
+    expect(voteResponse.body.data.activity.voting.notVoted).toEqual([
+      { id: owner.userId, displayName: "Activity Route Owner" },
+    ]);
+
+    const removeResponse = await member.agent.delete(
+      `/api/trips/${tripId}/activities/${activityId}/vote`,
+    );
+    expect(removeResponse.status).toBe(200);
+    expect(removeResponse.body.data.activity.voting.currentUserVoted).toBe(false);
+    expect(removeResponse.body.data.activity.voting.voted).toEqual([]);
+  });
 });

@@ -44,3 +44,19 @@ export const deleteActivity = (tripId: string, activityId: string) =>
   apiRequest<void>(`/trips/${tripId}/activities/${activityId}`, {
     method: "DELETE",
   });
+
+export const addActivityVote = async (tripId: string, activityId: string) => {
+  const response = await apiRequest<{ data: { activity: Activity } }>(
+    `/trips/${tripId}/activities/${activityId}/vote`,
+    { method: "POST" },
+  );
+  return response.data.activity;
+};
+
+export const removeActivityVote = async (tripId: string, activityId: string) => {
+  const response = await apiRequest<{ data: { activity: Activity } }>(
+    `/trips/${tripId}/activities/${activityId}/vote`,
+    { method: "DELETE" },
+  );
+  return response.data.activity;
+};

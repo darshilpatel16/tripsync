@@ -13,9 +13,11 @@ import {
   ActivityEditorRequiredError,
   ActivityNotFoundError,
   ActivityScheduleError,
+  addActivityVote,
   createActivity,
   deleteActivity,
   listActivities,
+  removeActivityVote,
   updateActivity,
   updateActivityStatus,
 } from "./activity.service.js";
@@ -152,6 +154,44 @@ activityRouter.patch("/:activityId/status", async (request, response, next) => {
       params.data.tripId,
       params.data.activityId,
       body.data.status,
+    );
+    response.status(200).json({ data: { activity } });
+  } catch (error) {
+    handleActivityError(error, response, next);
+  }
+});
+
+activityRouter.post("/:activityId/vote", async (request, response, next) => {
+  const params = activityParamsSchema.safeParse(request.params);
+  if (!params.success) {
+    sendValidationError(response, "The activity ID is invalid", params.error.issues);
+    return;
+  }
+
+  try {
+    const activity = await addActivityVote(
+      response.locals.user.id,
+      params.data.tripId,
+      params.data.activityId,
+    );
+    response.status(200).json({ data: { activity } });
+  } catch (error) {
+    handleActivityError(error, response, next);
+  }
+});
+
+activityRouter.delete("/:activityId/vote", async (request, response, next) => {
+  const params = activityParamsSchema.safeParse(request.params);
+  if (!params.success) {
+    sendValidationError(response, "The activity ID is invalid", params.error.issues);
+    return;
+  }
+
+  try {
+    const activity = await removeActivityVote(
+      response.locals.user.id,
+      params.data.tripId,
+      params.data.activityId,
     );
     response.status(200).json({ data: { activity } });
   } catch (error) {
