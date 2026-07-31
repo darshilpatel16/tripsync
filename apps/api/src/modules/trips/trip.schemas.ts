@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { supportedCurrencies } from "../../lib/currency.js";
 
 const isoDateSchema = z
   .string()
@@ -12,7 +13,8 @@ const currencySchema = z
   .string()
   .trim()
   .toUpperCase()
-  .regex(/^[A-Z]{3}$/, "Currency must be a three-letter code such as GBP");
+  .regex(/^[A-Z]{3}$/, "Currency must be a three-letter code such as GBP")
+  .refine((value) => supportedCurrencies.has(value), "Choose a supported world currency");
 
 const tripFields = {
   name: z

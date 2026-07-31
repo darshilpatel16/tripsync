@@ -4,12 +4,18 @@ import { requireAuthentication } from "../auth/auth.middleware.js";
 import { TripNotFoundError } from "../trips/trip.service.js";
 import {
   createExpenseBodySchema,
+  expenseParamsSchema,
   expenseTripParamsSchema,
 } from "./expense.schemas.js";
 import {
   createExpense,
+  deleteExpense,
+  ExpenseEditorRequiredError,
   ExpenseMemberError,
+  ExpenseNotFoundError,
+  getExpenseSummary,
   listExpenses,
+  updateExpense,
 } from "./expense.service.js";
 
 export const expenseRouter = Router({ mergeParams: true });
@@ -47,6 +53,14 @@ const handleExpenseError = (
     ]);
     return;
   }
+  if (error instanceof ExpenseNotFoundError) {
+    response.status(404).json({ error: { code: "EXPENSE_NOT_FOUND", message: "Expense was not found" } });
+    return;
+  }
+  if (error instanceof ExpenseEditorRequiredError) {
+    response.status(403).json({ error: { code: "EXPENSE_PERMISSION_REQUIRED", message: "Only the trip owner or payer can change this expense" } });
+    return;
+  }
   next(error);
 };
 
@@ -62,6 +76,14 @@ expenseRouter.get("/", async (request, response, next) => {
   } catch (error) {
     handleExpenseError(error, response, next);
   }
+});
+
+expenseRouter.get("/summary", async (request, response, next) => {
+  const params = expenseTripParamsSchema.safeParse(request.params);
+  if (!params.success) return void sendValidationError(response, "The trip ID is invalid", params.error.issues);
+  try {
+    response.status(200).json({ data: { summary: await getExpenseSummary(response.locals.user.id, params.data.tripId) } });
+  } catch (error) { handleExpenseError(error, response, next); }
 });
 
 expenseRouter.post("/", async (request, response, next) => {
@@ -84,4 +106,22 @@ expenseRouter.post("/", async (request, response, next) => {
   } catch (error) {
     handleExpenseError(error, response, next);
   }
+});
+
+expenseRouter.patch("/:expenseId", async (request, response, next) => {
+  const params = expenseParamsSchema.safeParse(request.params);
+  const body = createExpenseBodySchema.safeParse(request.body);
+  if (!params.success || !body.success) return void sendValidationError(response, "The expense update is invalid", [...(params.success ? [] : params.error.issues), ...(body.success ? [] : body.error.issues)]);
+  try {
+    response.status(200).json({ data: { expense: await updateExpense(response.locals.user.id, params.data.tripId, params.data.expenseId, body.data) } });
+  } catch (error) { handleExpenseError(error, response, next); }
+});
+
+expenseRouter.delete("/:expenseId", async (request, response, next) => {
+  const params = expenseParamsSchema.safeParse(request.params);
+  if (!params.success) return void sendValidationError(response, "The expense ID is invalid", params.error.issues);
+  try {
+    await deleteExpense(response.locals.user.id, params.data.tripId, params.data.expenseId);
+    response.status(204).send();
+  } catch (error) { handleExpenseError(error, response, next); }
 });

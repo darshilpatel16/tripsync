@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { ActivitySection } from "../activities/ActivitySection";
+import { ExpenseSection } from "../expenses/ExpenseSection";
+import { LanguageSelector } from "../components/LanguageSelector";
 import { useAuth } from "../auth/useAuth";
 import { ApiError } from "../lib/api";
 import {
@@ -146,7 +148,7 @@ export function TripOverviewPage() {
     <main className="dashboard-page">
       <nav className="dashboard-nav">
         <Link className="brand" to="/dashboard">TripSync</Link>
-        <Link className="nav-link" to="/dashboard">All trips</Link>
+        <div className="nav-actions"><LanguageSelector /><Link className="nav-link" to="/dashboard">All trips</Link></div>
       </nav>
       <section className="trip-overview">
         <div className="trip-hero">
@@ -175,6 +177,8 @@ export function TripOverviewPage() {
             tripStartDate={trip.startDate}
           />
         ) : null}
+
+        {user ? <ExpenseSection currentUserId={user.id} trip={trip} /> : null}
 
         <div className="overview-grid">
           <section className="overview-card">

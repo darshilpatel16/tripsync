@@ -29,4 +29,13 @@ describe("createExpenseBodySchema", () => {
       participantIds: [validExpense.participantIds[0], validExpense.participantIds[0]],
     }).success).toBe(false);
   });
+
+  it("accepts exact custom shares and rejects an incorrect total", () => {
+    const custom = { ...validExpense, participantIds: undefined, shares: [
+      { userId: validExpense.participantIds[0], amountMinor: 6000 },
+      { userId: validExpense.participantIds[1], amountMinor: 4100 },
+    ] };
+    expect(createExpenseBodySchema.safeParse(custom).success).toBe(true);
+    expect(createExpenseBodySchema.safeParse({ ...custom, shares: [{ ...custom.shares[0], amountMinor: 5000 }, custom.shares[1] ] }).success).toBe(false);
+  });
 });

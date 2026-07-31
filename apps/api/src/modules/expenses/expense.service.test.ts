@@ -7,9 +7,12 @@ import { registerUser } from "../auth/auth.service.js";
 import { createTrip, TripNotFoundError } from "../trips/trip.service.js";
 import {
   createExpense,
+  deleteExpense,
   ExpenseMemberError,
   listExpenses,
+  getExpenseSummary,
   splitEqually,
+  updateExpense,
 } from "./expense.service.js";
 
 const emails = [
@@ -90,5 +93,23 @@ describe("expense service", () => {
       participantIds: [ownerId, outsiderId],
       incurredAt: "2026-09-12T19:00:00Z",
     })).rejects.toBeInstanceOf(ExpenseMemberError);
+  });
+
+  it("supports custom updates, balances, settlements and deletion", async () => {
+    const expense = await createExpense(ownerId, tripId, {
+      title: "Custom dinner", amountMinor: 10000, paidById: ownerId,
+      shares: [{ userId: ownerId, amountMinor: 4000 }, { userId: memberId, amountMinor: 6000 }],
+      incurredAt: "2026-09-12T19:00:00Z",
+    });
+    const summary = await getExpenseSummary(memberId, tripId);
+    expect(summary.totalMinor).toBe(10000);
+    expect(summary.settlements).toEqual([{ from: { id: memberId, displayName: "Expense Member" }, to: { id: ownerId, displayName: "Expense Owner" }, amountMinor: 6000 }]);
+    const updated = await updateExpense(ownerId, tripId, expense.id, {
+      title: "Updated dinner", amountMinor: 9000, paidById: ownerId,
+      participantIds: [ownerId, memberId], incurredAt: "2026-09-12T19:00:00Z",
+    });
+    expect(updated.shares.reduce((sum, share) => sum + share.amountMinor, 0)).toBe(9000);
+    await deleteExpense(ownerId, tripId, expense.id);
+    await expect(listExpenses(ownerId, tripId)).resolves.toEqual([]);
   });
 });

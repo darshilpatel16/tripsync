@@ -60,6 +60,9 @@ describe("expense routes", () => {
     expect(listResponse.status).toBe(200);
     expect(listResponse.body.data.expenses).toHaveLength(1);
     expect(listResponse.body.data.expenses[0].shares).toHaveLength(2);
+    const summaryResponse = await owner.get(`/api/trips/${tripId}/expenses/summary`);
+    expect(summaryResponse.status).toBe(200);
+    expect(summaryResponse.body.data.summary.totalMinor).toBe(4501);
   });
 
   it("requires authentication", async () => {

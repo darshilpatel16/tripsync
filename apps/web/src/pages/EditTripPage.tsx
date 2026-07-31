@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../lib/api";
+import { CurrencySelect } from "../components/CurrencySelect";
 import { getTrip, updateTrip } from "../trips/trip-api";
 import type { CreateTripInput } from "../trips/trip-types";
 
@@ -152,15 +153,7 @@ export function EditTripPage() {
 
           <label className="form-field">
             <span>Main currency</span>
-            <select name="currency" onChange={handleChange} value={values.currency}>
-              <option value="GBP">GBP — British pound</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="USD">USD — US dollar</option>
-              <option value="CAD">CAD — Canadian dollar</option>
-              <option value="AUD">AUD — Australian dollar</option>
-              <option value="INR">INR — Indian rupee</option>
-              <option value="JPY">JPY — Japanese yen</option>
-            </select>
+            <CurrencySelect name="currency" onChange={handleChange} value={values.currency} />
             {fieldErrors.currency ? <small className="field-error">{fieldErrors.currency}</small> : null}
           </label>
 

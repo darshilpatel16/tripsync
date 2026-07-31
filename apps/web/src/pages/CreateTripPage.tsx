@@ -2,6 +2,7 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { ApiError } from "../lib/api";
+import { CurrencySelect } from "../components/CurrencySelect";
 import { createTrip } from "../trips/trip-api";
 import type { CreateTripInput } from "../trips/trip-types";
 
@@ -102,11 +103,7 @@ export function CreateTripPage() {
 
           <label className="form-field">
             <span>Main currency</span>
-            <select name="currency" onChange={handleChange} value={values.currency}>
-              <option value="GBP">GBP — British pound</option>
-              <option value="EUR">EUR — Euro</option>
-              <option value="USD">USD — US dollar</option>
-            </select>
+            <CurrencySelect name="currency" onChange={handleChange} value={values.currency} />
           </label>
 
           <button className="auth-submit" disabled={isSubmitting} type="submit">
