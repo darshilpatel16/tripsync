@@ -2,11 +2,13 @@ import { Route, Routes } from "react-router";
 
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { DashboardPage } from "./pages/DashboardPage";
+import { CreateTripPage } from "./pages/CreateTripPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { TripOverviewPage } from "./pages/TripOverviewPage";
 
 export function App() {
   return (
@@ -18,6 +20,8 @@ export function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/trips/new" element={<CreateTripPage />} />
+        <Route path="/trips/:tripId" element={<TripOverviewPage />} />
       </Route>
       <Route path="*" element={<HomePage />} />
     </Routes>
