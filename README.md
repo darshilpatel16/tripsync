@@ -48,9 +48,8 @@ API health check: `http://localhost:5000/api/health`
 ## Delivery milestones
 
 - Milestone 0: foundation and health-check vertical slice
-- Milestone 1: authentication
+- Milestone 1: authentication (complete; see `docs/MILESTONE_1_AUTHENTICATION.md`)
 - Milestone 2: trips and memberships
 - Milestone 3: itinerary and voting
 - Milestone 4: expenses and settlements
 - Milestone 5: accessibility, testing, deployment, and portfolio case study
-

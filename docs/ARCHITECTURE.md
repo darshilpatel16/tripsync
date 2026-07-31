@@ -34,9 +34,11 @@ Express API
 ## Security decisions
 
 - Passwords will be hashed with Argon2.
-- Authentication will use short-lived access and rotating refresh tokens in secure, HTTP-only cookies.
+- Authentication uses opaque, random database-backed sessions in secure, HTTP-only cookies.
+- Only hashes of session and password-reset tokens are stored.
+- A password reset invalidates every existing session for that user.
 - Trip membership is the authorisation boundary.
-- Login and invitation endpoints will be rate limited.
+- Login and password-reset endpoints are rate limited; invitations will be protected when implemented.
 - CORS will allow only the configured web origin.
 - Production cookies require HTTPS.
 
@@ -51,4 +53,3 @@ Express API
 ## Deferred decisions
 
 WebSockets, background jobs, object storage, maps, and email are intentionally deferred until after the MVP.
-
