@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
+import { ActivitySection } from "../activities/ActivitySection";
+import { useAuth } from "../auth/useAuth";
 import { ApiError } from "../lib/api";
 import {
   createTripInvitation,
@@ -26,6 +28,7 @@ const formatDate = (date: string) =>
 export function TripOverviewPage() {
   const { tripId = "" } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [trip, setTrip] = useState<TripDetail | null>(null);
   const [invitations, setInvitations] = useState<TripInvitation[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -162,6 +165,14 @@ export function TripOverviewPage() {
         </div>
 
         {errorMessage ? <p className="form-message form-message-error" role="alert">{errorMessage}</p> : null}
+
+        {user ? (
+          <ActivitySection
+            currentUserId={user.id}
+            tripId={trip.id}
+            tripRole={trip.role}
+          />
+        ) : null}
 
         <div className="overview-grid">
           <section className="overview-card">

@@ -8,6 +8,7 @@ import { TripOverviewPage } from "./pages/TripOverviewPage";
 import * as tripApi from "./trips/trip-api";
 
 vi.mock("./trips/trip-api");
+vi.mock("./activities/ActivitySection", () => ({ ActivitySection: () => null }));
 
 const user = {
   id: "22222222-2222-4222-8222-222222222222",
@@ -78,11 +79,13 @@ describe("invitation frontend flow", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={[`/trips/${trip.id}`]}>
-        <Routes>
-          <Route path="/trips/:tripId" element={<TripOverviewPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <AuthContext.Provider value={authValue}>
+        <MemoryRouter initialEntries={[`/trips/${trip.id}`]}>
+          <Routes>
+            <Route path="/trips/:tripId" element={<TripOverviewPage />} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>,
     );
 
     fireEvent.change(await screen.findByLabelText(/email address/i), {

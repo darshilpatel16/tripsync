@@ -599,6 +599,237 @@ h2 {
   padding: 48px 0;
 }
 
+.itinerary-section {
+  border-bottom: 1px solid #c9cec8;
+  padding: 56px 0 64px;
+}
+
+.itinerary-heading {
+  align-items: end;
+  display: flex;
+  gap: 32px;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.itinerary-heading h2 {
+  font-size: clamp(2.5rem, 5vw, 4.8rem);
+  margin-bottom: 16px;
+}
+
+.itinerary-heading p:last-child {
+  color: #556058;
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
+.activity-count {
+  border: 1px solid #aeb6af;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  font-weight: 750;
+  padding: 10px 16px;
+}
+
+.activity-create-card {
+  background: #e8e9df;
+  border-radius: 24px;
+  margin-bottom: 28px;
+  padding: clamp(24px, 4vw, 36px);
+}
+
+.activity-create-card h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.8rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.activity-form {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.activity-form input,
+.activity-form textarea {
+  background: #fffdf7;
+  border: 1px solid #aeb6af;
+  border-radius: 12px;
+  color: #132019;
+  font: inherit;
+  min-height: 50px;
+  padding: 12px 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+.activity-title-field,
+.activity-description-field,
+.activity-form-actions {
+  grid-column: 1 / -1;
+}
+
+.activity-form-actions,
+.activity-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.secondary-button {
+  background: transparent;
+  border: 1px solid #8e9a92;
+  color: #173f2e;
+}
+
+.secondary-button:hover {
+  background: #dde1da;
+}
+
+.activity-list {
+  display: grid;
+  gap: 16px;
+}
+
+.activity-card {
+  background: #fffdf7;
+  border: 1px solid #d8d8ce;
+  border-left: 5px solid #d97951;
+  border-radius: 20px;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 70px minmax(0, 1fr);
+  padding: 24px;
+}
+
+.activity-confirmed {
+  border-left-color: #2f7555;
+}
+
+.activity-cancelled {
+  border-left-color: #9b9f99;
+  opacity: 0.82;
+}
+
+.activity-edit-card {
+  display: block;
+}
+
+.activity-date-block {
+  align-content: start;
+  border-right: 1px solid #d8d8ce;
+  display: grid;
+  padding-right: 20px;
+  text-align: center;
+}
+
+.activity-date-block span {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.1rem;
+  line-height: 1;
+}
+
+.activity-date-block strong {
+  color: #68726b;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  margin-top: 7px;
+  text-transform: uppercase;
+}
+
+.activity-title-row {
+  align-items: start;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.activity-title-row h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 500;
+  margin: 8px 0 10px;
+}
+
+.activity-status {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  padding: 6px 9px;
+  text-transform: uppercase;
+}
+
+.status-proposed {
+  background: #f7ddca;
+  color: #843a23;
+}
+
+.status-confirmed {
+  background: #d9ebdf;
+  color: #1f5e40;
+}
+
+.status-cancelled {
+  background: #e4e5e1;
+  color: #5e625e;
+}
+
+.activity-author {
+  color: #68726b;
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.activity-schedule,
+.activity-location {
+  color: #455048;
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+
+.activity-location::before {
+  content: "Location: ";
+  color: #7a837d;
+  font-weight: 500;
+}
+
+.activity-description {
+  color: #556058;
+  line-height: 1.6;
+  margin: 16px 0;
+  max-width: 760px;
+}
+
+.activity-actions {
+  margin-top: 20px;
+}
+
+.activity-actions button {
+  font-size: 0.82rem;
+  padding: 10px 16px;
+}
+
+.activity-actions .text-button {
+  padding: 0;
+}
+
+.itinerary-empty {
+  background: #fffdf7;
+  border: 1px dashed #aeb6af;
+  border-radius: 18px;
+  color: #556058;
+  padding: 28px;
+}
+
+.itinerary-empty p {
+  margin: 8px 0 0;
+}
+
 .overview-card {
   background: #fffdf7;
   border: 1px solid #d8d8ce;
@@ -825,6 +1056,7 @@ h2 {
 
   .dashboard-heading,
   .trip-hero-heading,
+  .itinerary-heading,
   .danger-zone {
     align-items: stretch;
     flex-direction: column;
@@ -844,6 +1076,38 @@ h2 {
 
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .activity-form {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-title-field,
+  .activity-description-field,
+  .activity-form-actions {
+    grid-column: auto;
+  }
+
+  .activity-card {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-date-block {
+    border-bottom: 1px solid #d8d8ce;
+    border-right: 0;
+    display: flex;
+    gap: 8px;
+    justify-content: start;
+    padding: 0 0 16px;
+  }
+
+  .activity-title-row {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .activity-author {
+    text-align: left;
   }
 
   .auth-intro {
