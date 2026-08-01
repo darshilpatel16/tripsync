@@ -253,4 +253,19 @@ describe("password reset routes", () => {
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe("INVALID_RESET_TOKEN");
   });
+
+  it("stores and removes a validated local profile photo", async () => {
+    const agent = request.agent(app);
+    await agent.post("/api/auth/register").send(registration);
+    await agent.post("/api/auth/login").send({ email: registration.email, password: registration.password });
+    const avatarDataUrl = "data:image/png;base64,iVBORw0KGgo=";
+
+    const saveResponse = await agent.patch("/api/auth/profile/avatar").send({ avatarDataUrl });
+    expect(saveResponse.status).toBe(200);
+    expect(saveResponse.body.data.user.avatarDataUrl).toBe(avatarDataUrl);
+
+    const removeResponse = await agent.patch("/api/auth/profile/avatar").send({ avatarDataUrl: null });
+    expect(removeResponse.status).toBe(200);
+    expect(removeResponse.body.data.user.avatarDataUrl).toBeNull();
+  });
 });

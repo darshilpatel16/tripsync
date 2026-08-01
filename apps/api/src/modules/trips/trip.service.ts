@@ -101,7 +101,7 @@ export const getTrip = async (userId: string, tripId: string) => {
         select: {
           role: true,
           joinedAt: true,
-          user: { select: { id: true, displayName: true, email: true } },
+          user: { select: { id: true, displayName: true, email: true, avatarDataUrl: true } },
         },
       },
     },

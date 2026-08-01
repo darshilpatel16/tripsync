@@ -59,6 +59,7 @@ export const registerUser = async (input: RegisterBody) => {
         id: true,
         displayName: true,
         email: true,
+        avatarDataUrl: true,
         createdAt: true,
       },
     });
@@ -93,6 +94,7 @@ export const loginUser = async (input: LoginBody) => {
     id: user.id,
     displayName: user.displayName,
     email: user.email,
+    avatarDataUrl: user.avatarDataUrl,
     createdAt: user.createdAt,
   };
 };

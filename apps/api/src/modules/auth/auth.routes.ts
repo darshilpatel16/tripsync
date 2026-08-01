@@ -1,5 +1,6 @@
 import { Router, type CookieOptions } from "express";
 import { env } from "../../config/env.js";
+import { prisma } from "../../lib/prisma.js";
 import { createRateLimiter } from "../../middleware/rate-limit.js";
 import { requireAuthentication } from "./auth.middleware.js";
 import {
@@ -10,6 +11,7 @@ import {
 
 import {
   forgotPasswordBodySchema,
+  avatarBodySchema,
   loginBodySchema,
   registerBodySchema,
   resetPasswordBodySchema,
@@ -26,6 +28,31 @@ import {
 } from "./auth.service.js";
 
 export const authRouter = Router();
+
+authRouter.patch("/profile/avatar", requireAuthentication, async (request, response, next) => {
+  const validationResult = avatarBodySchema.safeParse(request.body);
+
+  if (!validationResult.success) {
+    response.status(400).json({
+      error: {
+        code: "VALIDATION_ERROR",
+        message: validationResult.error.issues[0]?.message ?? "Invalid profile photo",
+      },
+    });
+    return;
+  }
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: response.locals.user.id },
+      data: { avatarDataUrl: validationResult.data.avatarDataUrl },
+      select: { id: true, displayName: true, email: true, avatarDataUrl: true, createdAt: true },
+    });
+    response.json({ data: { user } });
+  } catch (error) {
+    next(error);
+  }
+});
 
 const authenticationRateLimiter = createRateLimiter({
   maxRequests: env.NODE_ENV === "test" ? 1000 : 10,

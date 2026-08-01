@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 import { useAuth } from "../auth/useAuth";
+import { ProfilePhotoEditor } from "../components/ProfilePhotoEditor";
 import { ApiError } from "../lib/api";
 import {
   acceptDashboardInvitation,
@@ -99,6 +100,7 @@ export function DashboardPage() {
       </nav>
 
       <section className="dashboard-content">
+        <ProfilePhotoEditor />
         <div className="dashboard-heading">
           <div>
             <p className="eyebrow">Your dashboard</p>

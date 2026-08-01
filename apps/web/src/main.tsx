@@ -5,13 +5,12 @@ import { BrowserRouter } from "react-router";
 import { App } from "./App";
 import { AuthProvider } from "./auth/AuthProvider";
 import "./styles.css";
+import { LocalisationProvider } from "./localisation/LocalisationProvider";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <LocalisationProvider><AuthProvider><App /></AuthProvider></LocalisationProvider>
     </BrowserRouter>
   </StrictMode>,
 );

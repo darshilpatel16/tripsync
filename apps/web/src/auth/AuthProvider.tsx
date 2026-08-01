@@ -59,6 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setStatus("guest");
       },
+      updateAvatar: async (avatarDataUrl: string | null) => {
+        const response = await apiRequest<UserResponse>("/auth/profile/avatar", {
+          method: "PATCH",
+          body: JSON.stringify({ avatarDataUrl }),
+        });
+        setUser(response.data.user);
+        return response.data.user;
+      },
     }),
     [status, user],
   );

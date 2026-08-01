@@ -17,9 +17,10 @@ describe("expense frontend flow", () => {
     vi.mocked(expenseApi.createExpense).mockResolvedValue({} as never);
     render(<ExpenseSection currentUserId={owner.id} trip={trip} />);
     await screen.findAllByText(/settled/i);
+    fireEvent.click(screen.getByRole("button", { name: /add expense/i }));
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Group dinner" } });
     fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: "45.90" } });
-    fireEvent.click(screen.getByRole("button", { name: /^add expense$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^save expense$/i }));
     await waitFor(() => expect(expenseApi.createExpense).toHaveBeenCalledWith(trip.id, expect.objectContaining({ title: "Group dinner", amountMinor: 4590, paidById: owner.id, participantIds: [owner.id, member.id] })));
   });
 });

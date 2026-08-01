@@ -2,6 +2,7 @@ export type AuthUser = {
   id: string;
   displayName: string;
   email: string;
+  avatarDataUrl?: string | null;
   createdAt: string;
 };
 
@@ -12,4 +13,5 @@ export type AuthContextValue = {
   status: AuthStatus;
   login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  updateAvatar?: (avatarDataUrl: string | null) => Promise<AuthUser>;
 };

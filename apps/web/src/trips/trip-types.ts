@@ -20,6 +20,7 @@ export type TripMember = {
     id: string;
     displayName: string;
     email: string;
+    avatarDataUrl?: string | null;
   };
 };
 

@@ -40,6 +40,19 @@ export const loginBodySchema = z
 
 export type LoginBody = z.infer<typeof loginBodySchema>;
 
+export const avatarBodySchema = z
+  .object({
+    avatarDataUrl: z
+      .string()
+      .max(1_500_000, "Profile photo must be smaller than 1 MB")
+      .regex(
+        /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/,
+        "Choose a JPEG, PNG or WebP image",
+      )
+      .nullable(),
+  })
+  .strict();
+
 export const forgotPasswordBodySchema = z
   .object({
     email: z

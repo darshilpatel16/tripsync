@@ -38,6 +38,7 @@ export const findUserBySessionToken = async (token: string) => {
           id: true,
           displayName: true,
           email: true,
+          avatarDataUrl: true,
           createdAt: true,
         },
       },
