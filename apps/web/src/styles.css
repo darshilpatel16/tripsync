@@ -619,6 +619,26 @@ h2 {
 
 .expense-section { border-bottom: 1px solid #c9cec8; padding: 56px 0 64px; }
 .weather-section { border-bottom: 1px solid #c9cec8; padding: 56px 0 64px; }
+.places-section { border-bottom: 1px solid #c9cec8; padding: 56px 0 64px; }
+.place-filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.place-filters button { font-size: .82rem; padding: 10px 16px; }
+.place-filters .active { background: #173f2e; }
+.destination-map { border: 1px solid #c9cec8; border-radius: 22px; height: 440px; overflow: hidden; width: 100%; z-index: 0; }
+.place-map-marker { align-items: center; background: #fffdf7; border: 2px solid #173f2e; border-radius: 50% 50% 50% 0; box-shadow: 0 4px 12px rgb(19 32 25 / 25%); display: flex; font-size: 1rem; justify-content: center; transform: rotate(-45deg); }
+.place-map-marker span { transform: rotate(45deg); }
+.place-results-heading { align-items: center; display: flex; gap: 12px; justify-content: space-between; margin: 24px 0 16px; }
+.place-results-heading span, .places-attribution { color: #68726b; font-size: .82rem; }
+.place-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.place-card { background: #fffdf7; border: 1px solid #d8d8ce; border-radius: 18px; display: flex; flex-direction: column; min-height: 250px; padding: 22px; }
+.place-card h3 { font-family: Georgia, "Times New Roman", serif; font-size: 1.6rem; font-weight: 500; margin: 14px 0 9px; }
+.place-card p, .place-card small { color: #68726b; }
+.place-category { color: #2f7555; font-size: .72rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.place-actions { align-items: center; display: flex; gap: 12px; justify-content: space-between; margin-top: auto; padding-top: 22px; }
+.place-actions a { color: #173f2e; font-size: .82rem; font-weight: 750; }
+.place-actions button { font-size: .78rem; padding: 10px 14px; }
+.places-message { background: #e8e9df; border-radius: 18px; display: grid; gap: 8px; padding: 24px; }
+.places-message p { margin: 0; }
+.places-attribution { display: block; margin-top: 14px; }
 .weather-location { align-items: center; display: flex; gap: 18px; justify-content: space-between; margin-bottom: 18px; }
 .weather-location span { color: #68726b; font-size: .85rem; }
 .weather-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
@@ -1254,6 +1274,8 @@ h2 {
   .participant-row input:last-child:not([type="checkbox"]) { grid-column: 2 / -1; }
   .expense-advanced { grid-template-columns: 1fr; }
   .budget-stats { grid-template-columns: 1fr; }
+  .destination-map { height: 360px; }
+  .place-results-heading { align-items: start; flex-direction: column; }
 
   .activity-title-field,
   .activity-description-field,

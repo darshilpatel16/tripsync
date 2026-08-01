@@ -16,6 +16,7 @@ import {
 } from "../trips/trip-api";
 import type { EmailDelivery, TripDetail, TripInvitation } from "../trips/trip-types";
 import { WeatherSection } from "../weather/WeatherSection";
+import { PlaceDiscoverySection } from "../places/PlaceDiscoverySection";
 
 type InvitationResult = {
   invitationUrl: string;
@@ -38,6 +39,7 @@ export function TripOverviewPage() {
   const [invitationResult, setInvitationResult] = useState<InvitationResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isWorking, setIsWorking] = useState(false);
+  const [activityVersion, setActivityVersion] = useState(0);
 
   const loadTrip = useCallback(async () => {
     const result = await getTrip(tripId);
@@ -171,8 +173,14 @@ export function TripOverviewPage() {
 
         <WeatherSection tripId={trip.id} />
 
+        <PlaceDiscoverySection
+          onActivityAdded={() => setActivityVersion((current) => current + 1)}
+          tripId={trip.id}
+        />
+
         {user ? (
           <ActivitySection
+            key={activityVersion}
             currentUserId={user.id}
             tripId={trip.id}
             tripEndDate={trip.endDate}
