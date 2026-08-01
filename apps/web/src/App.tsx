@@ -11,11 +11,10 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { TripOverviewPage } from "./pages/TripOverviewPage";
-import { LanguageSelector } from "./components/LanguageSelector";
 
 export function App() {
   return (
-    <><div className="global-language"><LanguageSelector /></div><Routes>
+    <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
@@ -29,6 +28,6 @@ export function App() {
         <Route path="/trips/:tripId" element={<TripOverviewPage />} />
       </Route>
       <Route path="*" element={<HomePage />} />
-    </Routes></>
+    </Routes>
   );
 }

@@ -650,8 +650,6 @@ h2 {
 .expense-options-toggle { justify-self: start; }
 .expense-advanced { border-top: 1px solid #c4c9c3; display: grid; gap: 16px; grid-template-columns: 1fr 1fr; padding-top: 18px; }
 .expense-advanced .split-mode { grid-column: 1 / -1; }
-.global-language { position: fixed; right: 18px; top: 16px; z-index: 30; }
-.global-language .language-selector { background: #fffdf7; border: 1px solid #d8d8ce; border-radius: 12px; box-shadow: 0 8px 24px rgb(23 63 46 / 10%); padding: 7px 10px; }
 
 .itinerary-heading {
   align-items: end;
