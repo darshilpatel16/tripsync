@@ -10,6 +10,7 @@ import * as tripApi from "./trips/trip-api";
 vi.mock("./trips/trip-api");
 vi.mock("./activities/ActivitySection", () => ({ ActivitySection: () => null }));
 vi.mock("./expenses/ExpenseSection", () => ({ ExpenseSection: () => null }));
+vi.mock("./weather/WeatherSection", () => ({ WeatherSection: () => null }));
 
 const user = {
   id: "22222222-2222-4222-8222-222222222222",

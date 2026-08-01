@@ -15,6 +15,7 @@ import {
   removeTripMember,
 } from "../trips/trip-api";
 import type { EmailDelivery, TripDetail, TripInvitation } from "../trips/trip-types";
+import { WeatherSection } from "../weather/WeatherSection";
 
 type InvitationResult = {
   invitationUrl: string;
@@ -167,6 +168,8 @@ export function TripOverviewPage() {
         </div>
 
         {errorMessage ? <p className="form-message form-message-error" role="alert">{errorMessage}</p> : null}
+
+        <WeatherSection tripId={trip.id} />
 
         {user ? (
           <ActivitySection
