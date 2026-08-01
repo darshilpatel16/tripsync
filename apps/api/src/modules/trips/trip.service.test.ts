@@ -37,6 +37,7 @@ const tripInput = {
   startDate: "2026-09-10",
   endDate: "2026-09-17",
   currency: "EUR",
+  budgetMinor: 150000,
 };
 
 beforeEach(async () => {
@@ -71,6 +72,7 @@ describe("trip service", () => {
 
     expect(trip).toMatchObject({
       name: tripInput.name,
+      budgetMinor: tripInput.budgetMinor,
       role: "OWNER",
       memberCount: 1,
     });

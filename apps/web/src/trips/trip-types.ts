@@ -7,6 +7,7 @@ export type TripSummary = {
   startDate: string;
   endDate: string;
   currency: string;
+  budgetMinor: number | null;
   role: TripRole;
   memberCount: number;
   createdAt: string;
@@ -34,6 +35,7 @@ export type CreateTripInput = {
   startDate: string;
   endDate: string;
   currency: string;
+  budgetMinor?: number | null;
 };
 
 export type InvitationStatus = "PENDING" | "ACCEPTED" | "DECLINED" | "EXPIRED";

@@ -30,6 +30,13 @@ const tripFields = {
   startDate: isoDateSchema,
   endDate: isoDateSchema,
   currency: currencySchema,
+  budgetMinor: z
+    .number()
+    .int("Budget must use whole minor units")
+    .positive("Budget must be greater than zero")
+    .max(2_000_000_000, "Budget is too large")
+    .nullable()
+    .optional(),
 };
 
 const datesAreInOrder = (value: { startDate?: string; endDate?: string }) =>
@@ -50,6 +57,7 @@ export const updateTripBodySchema = z
     startDate: tripFields.startDate.optional(),
     endDate: tripFields.endDate.optional(),
     currency: tripFields.currency.optional(),
+    budgetMinor: tripFields.budgetMinor,
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {

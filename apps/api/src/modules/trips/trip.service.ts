@@ -27,6 +27,7 @@ const tripSummarySelection = (userId: string) => ({
   startDate: true,
   endDate: true,
   currency: true,
+  budgetMinor: true,
   createdAt: true,
   updatedAt: true,
   members: {
@@ -62,6 +63,7 @@ export const createTrip = async (userId: string, input: CreateTripBody) => {
       startDate: toDatabaseDate(input.startDate),
       endDate: toDatabaseDate(input.endDate),
       currency: input.currency,
+      budgetMinor: input.budgetMinor ?? null,
       createdById: userId,
       members: {
         create: { userId, role: "OWNER" },
@@ -93,6 +95,7 @@ export const getTrip = async (userId: string, tripId: string) => {
       startDate: true,
       endDate: true,
       currency: true,
+      budgetMinor: true,
       createdAt: true,
       updatedAt: true,
       _count: { select: { members: true } },
@@ -171,6 +174,9 @@ export const updateTrip = async (
       ...(input.startDate ? { startDate } : {}),
       ...(input.endDate ? { endDate } : {}),
       ...(input.currency ? { currency: input.currency } : {}),
+      ...(input.budgetMinor !== undefined
+        ? { budgetMinor: input.budgetMinor }
+        : {}),
     },
     select: tripSummarySelection(userId),
   });

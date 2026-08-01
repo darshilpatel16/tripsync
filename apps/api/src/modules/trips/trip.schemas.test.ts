@@ -11,6 +11,7 @@ describe("createTripBodySchema", () => {
         startDate: "2026-09-10",
         endDate: "2026-09-17",
         currency: " eur ",
+        budgetMinor: 150000,
       }),
     ).toEqual({
       name: "Summer in Italy",
@@ -18,6 +19,7 @@ describe("createTripBodySchema", () => {
       startDate: "2026-09-10",
       endDate: "2026-09-17",
       currency: "EUR",
+      budgetMinor: 150000,
     });
   });
 
@@ -41,6 +43,19 @@ describe("createTripBodySchema", () => {
       currency: "GBP",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("rejects a zero or negative budget", () => {
+    const baseTrip = {
+      name: "Budget trip",
+      destination: "London",
+      startDate: "2026-09-10",
+      endDate: "2026-09-12",
+      currency: "GBP",
+    };
+
+    expect(createTripBodySchema.safeParse({ ...baseTrip, budgetMinor: 0 }).success).toBe(false);
+    expect(createTripBodySchema.safeParse({ ...baseTrip, budgetMinor: -100 }).success).toBe(false);
   });
 });
 

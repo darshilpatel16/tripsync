@@ -60,8 +60,29 @@ export function ExpenseSection({ trip, currentUserId }: Props) {
     try { await deleteExpense(trip.id, expense.id); await load(); } catch { setError("TripSync could not delete this expense."); }
   };
 
+  const budgetStatus = summary && trip.budgetMinor !== null
+    ? {
+        remainingMinor: trip.budgetMinor - summary.totalMinor,
+        percentageUsed: Math.min(
+          100,
+          Math.round((summary.totalMinor / trip.budgetMinor) * 100),
+        ),
+      }
+    : null;
+
   return <section className="expense-section">
     <div className="itinerary-heading"><div><p className="eyebrow">Shared expenses</p><h2>Who paid for what?</h2><p>Add a cost in three simple steps. TripSync works out everyone&rsquo;s balance.</p></div><div className="expense-heading-actions">{summary ? <strong className="expense-total">{formatMoney(summary.totalMinor, summary.currency)} total</strong> : null}<button type="button" onClick={() => setShowForm((value) => !value)}>{showForm ? "Close" : "+ Add expense"}</button></div></div>
+    {summary && budgetStatus && trip.budgetMinor !== null ? <section className={`budget-overview ${budgetStatus.remainingMinor < 0 ? "budget-over" : ""}`} aria-label="Trip budget">
+      <div className="budget-stats">
+        <div><span>Trip budget</span><strong>{formatMoney(trip.budgetMinor, trip.currency)}</strong></div>
+        <div><span>Spent</span><strong>{formatMoney(summary.totalMinor, trip.currency)}</strong></div>
+        <div><span>{budgetStatus.remainingMinor < 0 ? "Over budget" : "Remaining"}</span><strong>{formatMoney(Math.abs(budgetStatus.remainingMinor), trip.currency)}</strong></div>
+      </div>
+      <div className="budget-progress" role="progressbar" aria-label="Budget used" aria-valuemin={0} aria-valuemax={trip.budgetMinor} aria-valuenow={Math.min(summary.totalMinor, trip.budgetMinor)}>
+        <span className="budget-progress-fill" style={{ width: `${budgetStatus.percentageUsed}%` }} />
+      </div>
+      <small>{budgetStatus.percentageUsed}% of the group budget used</small>
+    </section> : null}
     {summary ? <div className="balance-grid">{summary.balances.map((balance) => <div className="balance-card" key={balance.user.id}><span>{balance.user.displayName}</span><strong>{balance.amountMinor === 0 ? "Settled" : balance.amountMinor > 0 ? `gets ${formatMoney(balance.amountMinor, summary.currency)}` : `owes ${formatMoney(-balance.amountMinor, summary.currency)}`}</strong></div>)}</div> : null}
     {summary?.settlements.length ? <div className="settlement-card"><h3>Suggested settlements</h3>{summary.settlements.map((item, index) => <p key={`${item.from.id}-${item.to.id}-${index}`}><strong>{item.from.displayName}</strong> pays <strong>{item.to.displayName}</strong> {formatMoney(item.amountMinor, summary.currency)}</p>)}</div> : null}
     {showForm ? <form className="expense-form expense-form-simple" onSubmit={submit}>

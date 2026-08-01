@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../lib/api";
 import { CurrencySelect } from "../components/CurrencySelect";
+import { majorToMinor, minorToMajor } from "../lib/currency";
 import { getTrip, updateTrip } from "../trips/trip-api";
 import type { CreateTripInput } from "../trips/trip-types";
 
@@ -14,12 +15,14 @@ const emptyValues: CreateTripInput = {
   startDate: "",
   endDate: "",
   currency: "GBP",
+  budgetMinor: null,
 };
 
 export function EditTripPage() {
   const { tripId = "" } = useParams();
   const navigate = useNavigate();
   const [values, setValues] = useState(emptyValues);
+  const [budget, setBudget] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState("");
   const [status, setStatus] = useState<"loading" | "ready" | "forbidden">("loading");
@@ -40,7 +43,13 @@ export function EditTripPage() {
           startDate: trip.startDate.slice(0, 10),
           endDate: trip.endDate.slice(0, 10),
           currency: trip.currency,
+          budgetMinor: trip.budgetMinor,
         });
+        setBudget(
+          trip.budgetMinor === null
+            ? ""
+            : String(minorToMajor(trip.budgetMinor, trip.currency)),
+        );
         setStatus("ready");
       })
       .catch((error) => {
@@ -72,7 +81,10 @@ export function EditTripPage() {
     setIsSubmitting(true);
 
     try {
-      await updateTrip(tripId, values);
+      const budgetMinor = budget.trim()
+        ? majorToMinor(budget, values.currency)
+        : null;
+      await updateTrip(tripId, { ...values, budgetMinor });
       navigate(`/trips/${tripId}`, { replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -84,6 +96,9 @@ export function EditTripPage() {
         }
         setFieldErrors(nextErrors);
         setFormError(error.message);
+      } else if (error instanceof Error && error.message === "Enter a positive amount") {
+        setFieldErrors({ budgetMinor: "Enter a budget greater than zero" });
+        setFormError("Check the trip budget and try again.");
       } else {
         setFormError("TripSync could not update this trip. Please try again.");
       }
@@ -155,6 +170,22 @@ export function EditTripPage() {
             <span>Main currency</span>
             <CurrencySelect name="currency" onChange={handleChange} value={values.currency} />
             {fieldErrors.currency ? <small className="field-error">{fieldErrors.currency}</small> : null}
+          </label>
+
+          <label className="form-field">
+            <span>Total trip budget ({values.currency})</span>
+            <input
+              inputMode="decimal"
+              onChange={(event) => {
+                setBudget(event.target.value);
+                setFieldErrors((current) => ({ ...current, budgetMinor: undefined }));
+                setFormError("");
+              }}
+              placeholder="1500.00"
+              value={budget}
+            />
+            <small>Optional group budget. Leave this empty to remove it.</small>
+            {fieldErrors.budgetMinor ? <small className="field-error">{fieldErrors.budgetMinor}</small> : null}
           </label>
 
           <button className="auth-submit" disabled={isSubmitting} type="submit">

@@ -32,6 +32,7 @@ const trip = {
   startDate: "2026-09-10T00:00:00.000Z",
   endDate: "2026-09-17T00:00:00.000Z",
   currency: "EUR",
+  budgetMinor: null,
   role: "OWNER" as const,
   memberCount: 1,
   createdAt: "2026-07-31T00:00:00.000Z",

@@ -29,6 +29,7 @@ const trip = {
   startDate: "2026-09-10T00:00:00.000Z",
   endDate: "2026-09-17T00:00:00.000Z",
   currency: "EUR",
+  budgetMinor: 150000,
   role: "OWNER" as const,
   memberCount: 1,
   createdAt: "2026-07-31T00:00:00.000Z",
@@ -74,6 +75,7 @@ describe("trip frontend flow", () => {
     fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: "2026-09-10" } });
     fireEvent.change(screen.getByLabelText(/end date/i), { target: { value: "2026-09-17" } });
     fireEvent.change(screen.getByLabelText(/main currency/i), { target: { value: "EUR" } });
+    fireEvent.change(screen.getByLabelText(/total trip budget/i), { target: { value: "1500.00" } });
     fireEvent.click(screen.getByRole("button", { name: /^create trip$/i }));
 
     await waitFor(() => {
@@ -83,6 +85,7 @@ describe("trip frontend flow", () => {
         startDate: "2026-09-10",
         endDate: "2026-09-17",
         currency: "EUR",
+        budgetMinor: 150000,
       });
       expect(screen.getByRole("heading", { name: /trip overview reached/i })).toBeInTheDocument();
     });
@@ -119,6 +122,7 @@ describe("trip frontend flow", () => {
         startDate: "2026-09-10",
         endDate: "2026-09-17",
         currency: "EUR",
+        budgetMinor: 150000,
       });
       expect(screen.getByRole("heading", { name: /updated trip opened/i })).toBeInTheDocument();
     });

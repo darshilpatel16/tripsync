@@ -6,13 +6,20 @@ import * as expenseApi from "./expenses/expense-api";
 vi.mock("./expenses/expense-api");
 const owner = { id: "11111111-1111-4111-8111-111111111111", displayName: "Darshil", email: "d@test.com" };
 const member = { id: "22222222-2222-4222-8222-222222222222", displayName: "Aisha", email: "a@test.com" };
-const trip = { id: "33333333-3333-4333-8333-333333333333", name: "Rome", destination: "Rome", startDate: "2026-09-10T00:00:00Z", endDate: "2026-09-17T00:00:00Z", currency: "EUR", role: "OWNER" as const, memberCount: 2, createdAt: "", updatedAt: "", members: [{ role: "OWNER" as const, joinedAt: "", user: owner }, { role: "MEMBER" as const, joinedAt: "", user: member }] };
+const trip = { id: "33333333-3333-4333-8333-333333333333", name: "Rome", destination: "Rome", startDate: "2026-09-10T00:00:00Z", endDate: "2026-09-17T00:00:00Z", currency: "EUR", budgetMinor: 150000, role: "OWNER" as const, memberCount: 2, createdAt: "", updatedAt: "", members: [{ role: "OWNER" as const, joinedAt: "", user: owner }, { role: "MEMBER" as const, joinedAt: "", user: member }] };
 const summary = { currency: "EUR", totalMinor: 0, balances: [{ user: owner, amountMinor: 0 }, { user: member, amountMinor: 0 }], settlements: [] };
 
 beforeEach(() => { vi.clearAllMocks(); vi.mocked(expenseApi.listExpenses).mockResolvedValue([]); vi.mocked(expenseApi.getExpenseSummary).mockResolvedValue(summary); });
 afterEach(cleanup);
 
 describe("expense frontend flow", () => {
+  it("shows the trip budget and remaining amount", async () => {
+    render(<ExpenseSection currentUserId={owner.id} trip={trip} />);
+
+    expect(await screen.findAllByText("€1,500.00")).toHaveLength(2);
+    expect(screen.getByRole("progressbar", { name: /budget used/i })).toBeInTheDocument();
+  });
+
   it("converts a major amount and creates an equal split", async () => {
     vi.mocked(expenseApi.createExpense).mockResolvedValue({} as never);
     render(<ExpenseSection currentUserId={owner.id} trip={trip} />);
