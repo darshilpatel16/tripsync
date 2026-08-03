@@ -5,8 +5,9 @@ import { ApiError } from "../lib/api";
 import { DestinationMap } from "./DestinationMap";
 import { getTripPlaces } from "./place-api";
 import type { Place, PlaceCategory, TripPlaces } from "./place-types";
+import { previewPlaces } from "../preview/travel-preview";
 
-type Props = { tripId: string; onActivityAdded: () => void };
+type Props = { tripId: string; destination: string; onActivityAdded: () => void };
 type Filter = "ALL" | PlaceCategory;
 
 const filters: Array<{ value: Filter; label: string }> = [
@@ -20,7 +21,7 @@ const filters: Array<{ value: Filter; label: string }> = [
 const categoryLabel = (category: PlaceCategory) =>
   category.charAt(0) + category.slice(1).toLowerCase();
 
-export function PlaceDiscoverySection({ tripId, onActivityAdded }: Props) {
+export function PlaceDiscoverySection({ tripId, destination, onActivityAdded }: Props) {
   const [result, setResult] = useState<TripPlaces | null>(null);
   const [filter, setFilter] = useState<Filter>("ALL");
   const [error, setError] = useState("");
@@ -29,13 +30,30 @@ export function PlaceDiscoverySection({ tripId, onActivityAdded }: Props) {
 
   useEffect(() => {
     let isActive = true;
+    let isSettled = false;
+    const previewTimer = window.setTimeout(() => {
+      if (isActive && !isSettled) {
+        isSettled = true;
+        setResult(previewPlaces(destination));
+      }
+    }, 3500);
     getTripPlaces(tripId)
-      .then((places) => { if (isActive) setResult(places); })
-      .catch((caught) => {
-        if (isActive) setError(caught instanceof ApiError ? caught.message : "Nearby places are temporarily unavailable.");
+      .then((places) => {
+        if (isActive && !isSettled) {
+          isSettled = true;
+          window.clearTimeout(previewTimer);
+          setResult(places.status === "UNAVAILABLE" ? previewPlaces(destination) : places);
+        }
+      })
+      .catch(() => {
+        if (isActive && !isSettled) {
+          isSettled = true;
+          window.clearTimeout(previewTimer);
+          setResult(previewPlaces(destination));
+        }
       });
-    return () => { isActive = false; };
-  }, [tripId]);
+    return () => { isActive = false; window.clearTimeout(previewTimer); };
+  }, [destination, tripId]);
 
   const visiblePlaces = useMemo(
     () => result?.status === "AVAILABLE"
@@ -74,6 +92,7 @@ export function PlaceDiscoverySection({ tripId, onActivityAdded }: Props) {
       {result?.status === "UNAVAILABLE" ? <div className="places-message"><strong>Destination not found</strong><p>{result.message}</p></div> : null}
       {result?.status === "AVAILABLE" ? (
         <>
+          {result.isPreview ? <div className="preview-banner"><strong>Preview data</strong><span>Live nearby places will replace these examples when the provider is available.</span></div> : null}
           <div className="place-filters" aria-label="Place categories">
             {filters.map((item) => <button className={filter === item.value ? "active" : "secondary-button"} key={item.value} onClick={() => setFilter(item.value)} type="button">{item.label}</button>)}
           </div>

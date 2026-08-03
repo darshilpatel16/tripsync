@@ -9,6 +9,7 @@ export type WeatherDay = {
 
 export type AvailableTripWeather = {
   status: "AVAILABLE";
+  isPreview?: boolean;
   location: {
     name: string;
     region: string | null;

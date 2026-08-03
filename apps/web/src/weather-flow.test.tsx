@@ -18,14 +18,14 @@ describe("weather frontend flow", () => {
       attribution: "Weather data by Open-Meteo.com",
     });
 
-    render(<WeatherSection tripId="11111111-1111-4111-8111-111111111111" />);
+    render(<WeatherSection destination="Rome, Italy" tripEndDate="2026-08-03" tripId="11111111-1111-4111-8111-111111111111" tripStartDate="2026-08-03" />);
 
     expect(await screen.findByText("Rome, Italy")).toBeInTheDocument();
     expect(screen.getByText("Mainly clear")).toBeInTheDocument();
     expect(screen.getByText(/10% rain/i)).toBeInTheDocument();
   });
 
-  it("explains when the trip is too far away", async () => {
+  it("shows clearly labelled preview weather when the trip is too far away", async () => {
     vi.mocked(weatherApi.getTripWeather).mockResolvedValue({
       status: "UNAVAILABLE",
       reason: "TOO_EARLY",
@@ -33,9 +33,9 @@ describe("weather frontend flow", () => {
       forecastAvailableFrom: "2026-08-20",
     });
 
-    render(<WeatherSection tripId="11111111-1111-4111-8111-111111111111" />);
+    render(<WeatherSection destination="Rome, Italy" tripEndDate="2026-09-07" tripId="11111111-1111-4111-8111-111111111111" tripStartDate="2026-09-03" />);
 
-    expect(await screen.findByText(/forecast not available yet/i)).toBeInTheDocument();
-    expect(screen.getByText(/16 days before/i)).toBeInTheDocument();
+    expect(await screen.findByText(/preview data/i)).toBeInTheDocument();
+    expect(screen.getByText(/live weather will replace/i)).toBeInTheDocument();
   });
 });

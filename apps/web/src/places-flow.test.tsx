@@ -27,7 +27,7 @@ describe("places frontend flow", () => {
     vi.mocked(activityApi.createActivity).mockResolvedValue({} as never);
     const onActivityAdded = vi.fn();
 
-    render(<PlaceDiscoverySection onActivityAdded={onActivityAdded} tripId={tripId} />);
+    render(<PlaceDiscoverySection destination="Rome, Italy" onActivityAdded={onActivityAdded} tripId={tripId} />);
     expect(await screen.findByText("Pasta House")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Restaurants" }));
     expect(screen.queryByText("City Museum")).not.toBeInTheDocument();

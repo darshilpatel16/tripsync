@@ -13,6 +13,8 @@ const envSchema = z.object({
   WEB_ORIGIN: z.string().url().default("http://localhost:5173"),
   RESEND_API_KEY: optionalEnvironmentValue(1),
   EMAIL_FROM: optionalEnvironmentValue(3),
+  TICKETMASTER_API_KEY: optionalEnvironmentValue(1),
+  OPENROUTESERVICE_API_KEY: optionalEnvironmentValue(1),
 });
 
 export const env = envSchema.parse(process.env);

@@ -12,6 +12,8 @@ import { activityRouter } from "./modules/activities/activity.routes.js";
 import { expenseRouter } from "./modules/expenses/expense.routes.js";
 import { weatherRouter } from "./modules/weather/weather.routes.js";
 import { placesRouter } from "./modules/places/places.routes.js";
+import { eventsRouter } from "./modules/events/events.routes.js";
+import { transportRouter } from "./modules/transport/transport.routes.js";
 
 export const createApp = () => {
   const app = express();
@@ -27,6 +29,8 @@ export const createApp = () => {
   app.use("/api/trips/:tripId/expenses", expenseRouter);
   app.use("/api/trips/:tripId/weather", weatherRouter);
   app.use("/api/trips/:tripId/places", placesRouter);
+  app.use("/api/trips/:tripId/events", eventsRouter);
+  app.use("/api/trips/:tripId/transport", transportRouter);
   app.use("/api/trips", tripRouter);
   app.use("/api/invitations", invitationRouter);
 

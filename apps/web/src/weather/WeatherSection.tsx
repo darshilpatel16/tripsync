@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { ApiError } from "../lib/api";
 import { getTripWeather } from "./weather-api";
 import type { TripWeather, WeatherDay } from "./weather-types";
+import { previewWeather } from "../preview/travel-preview";
 
-type Props = { tripId: string };
+type Props = { tripId: string; destination: string; tripStartDate: string; tripEndDate: string };
 
 const weatherLabels: Record<number, { icon: string; label: string }> = {
   0: { icon: "☀️", label: "Clear sky" },
@@ -41,27 +41,36 @@ const formatDay = (date: string) =>
     timeZone: "UTC",
   });
 
-export function WeatherSection({ tripId }: Props) {
+export function WeatherSection({ tripId, destination, tripStartDate, tripEndDate }: Props) {
   const [weather, setWeather] = useState<TripWeather | null>(null);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     let isActive = true;
+    let isSettled = false;
+    const previewTimer = window.setTimeout(() => {
+      if (isActive && !isSettled) {
+        isSettled = true;
+        setWeather(previewWeather(destination, tripStartDate, tripEndDate));
+      }
+    }, 3500);
     getTripWeather(tripId)
       .then((result) => {
-        if (isActive) setWeather(result);
+        if (!isActive || isSettled) return;
+        isSettled = true;
+        window.clearTimeout(previewTimer);
+        setWeather(result.status === "UNAVAILABLE" && result.reason !== "TRIP_ENDED"
+          ? previewWeather(destination, tripStartDate, tripEndDate)
+          : result);
       })
-      .catch((caught) => {
-        if (isActive) {
-          setError(
-            caught instanceof ApiError
-              ? caught.message
-              : "Weather information is temporarily unavailable.",
-          );
+      .catch(() => {
+        if (isActive && !isSettled) {
+          isSettled = true;
+          window.clearTimeout(previewTimer);
+          setWeather(previewWeather(destination, tripStartDate, tripEndDate));
         }
       });
-    return () => { isActive = false; };
-  }, [tripId]);
+    return () => { isActive = false; window.clearTimeout(previewTimer); };
+  }, [destination, tripEndDate, tripId, tripStartDate]);
 
   return (
     <section className="weather-section" aria-labelledby="weather-heading">
@@ -73,8 +82,7 @@ export function WeatherSection({ tripId }: Props) {
         </div>
       </div>
 
-      {error ? <div className="weather-message weather-error" role="status">{error}</div> : null}
-      {!error && !weather ? <div className="weather-message">Loading destination weather…</div> : null}
+      {!weather ? <div className="weather-message">Loading destination weather…</div> : null}
       {weather?.status === "UNAVAILABLE" ? (
         <div className="weather-message">
           <strong>Forecast not available yet</strong>
@@ -84,6 +92,7 @@ export function WeatherSection({ tripId }: Props) {
       ) : null}
       {weather?.status === "AVAILABLE" ? (
         <>
+          {weather.isPreview ? <div className="preview-banner"><strong>Preview data</strong><span>Live weather will replace this sample when a forecast is available.</span></div> : null}
           <div className="weather-location">
             <strong>{weather.location.name}{weather.location.country ? `, ${weather.location.country}` : ""}</strong>
             {weather.forecast.isPartial ? <span>Partial forecast—more days will appear closer to departure.</span> : null}

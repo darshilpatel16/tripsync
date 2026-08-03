@@ -12,6 +12,8 @@ vi.mock("./activities/ActivitySection", () => ({ ActivitySection: () => null }))
 vi.mock("./expenses/ExpenseSection", () => ({ ExpenseSection: () => null }));
 vi.mock("./weather/WeatherSection", () => ({ WeatherSection: () => null }));
 vi.mock("./places/PlaceDiscoverySection", () => ({ PlaceDiscoverySection: () => null }));
+vi.mock("./events/EventDiscoverySection", () => ({ EventDiscoverySection: () => null }));
+vi.mock("./transport/TransportPlannerSection", () => ({ TransportPlannerSection: () => null }));
 
 const user = {
   id: "22222222-2222-4222-8222-222222222222",

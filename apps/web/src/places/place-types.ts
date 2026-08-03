@@ -15,6 +15,7 @@ export type Place = {
 export type TripPlaces =
   | {
       status: "AVAILABLE";
+      isPreview?: boolean;
       location: { name: string; region: string | null; country: string | null; latitude: number; longitude: number };
       places: Place[];
       attribution: string;
