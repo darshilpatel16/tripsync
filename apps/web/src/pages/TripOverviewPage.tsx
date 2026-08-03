@@ -15,10 +15,6 @@ import {
   removeTripMember,
 } from "../trips/trip-api";
 import type { EmailDelivery, TripDetail, TripInvitation } from "../trips/trip-types";
-import { WeatherSection } from "../weather/WeatherSection";
-import { PlaceDiscoverySection } from "../places/PlaceDiscoverySection";
-import { EventDiscoverySection } from "../events/EventDiscoverySection";
-import { TransportPlannerSection } from "../transport/TransportPlannerSection";
 
 type InvitationResult = {
   invitationUrl: string;
@@ -41,7 +37,6 @@ export function TripOverviewPage() {
   const [invitationResult, setInvitationResult] = useState<InvitationResult | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isWorking, setIsWorking] = useState(false);
-  const [activityVersion, setActivityVersion] = useState(0);
 
   const loadTrip = useCallback(async () => {
     const result = await getTrip(tripId);
@@ -173,30 +168,8 @@ export function TripOverviewPage() {
 
         {errorMessage ? <p className="form-message form-message-error" role="alert">{errorMessage}</p> : null}
 
-        <WeatherSection destination={trip.destination} tripEndDate={trip.endDate} tripId={trip.id} tripStartDate={trip.startDate} />
-
-        <PlaceDiscoverySection
-          destination={trip.destination}
-          onActivityAdded={() => setActivityVersion((current) => current + 1)}
-          tripId={trip.id}
-        />
-
-        <EventDiscoverySection
-          destination={trip.destination}
-          onActivityAdded={() => setActivityVersion((current) => current + 1)}
-          tripId={trip.id}
-          tripStartDate={trip.startDate}
-        />
-
-        <TransportPlannerSection
-          activityVersion={activityVersion}
-          destination={trip.destination}
-          tripId={trip.id}
-        />
-
         {user ? (
           <ActivitySection
-            key={activityVersion}
             currentUserId={user.id}
             tripId={trip.id}
             tripEndDate={trip.endDate}
