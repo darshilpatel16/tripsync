@@ -1201,6 +1201,10 @@ h2 {
     display: none;
   }
 
+  .dashboard-nav .nav-actions .nav-link:first-child {
+    display: inline;
+  }
+
   .auth-layout {
     grid-template-columns: 1fr;
     padding-top: 32px;
