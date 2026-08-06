@@ -1,4 +1,5 @@
 import { WorkspaceShell } from "../components/WorkspaceShell";
+import { InvitationInbox } from "../components/InvitationInbox";
 import { Link } from "react-router";
 
 const features = [
@@ -10,8 +11,12 @@ const features = [
 
 export function DashboardPage() {
   return <WorkspaceShell>
+    <InvitationInbox />
     <section className="workspace-page dashboard-introduction">
-      <div className="dashboard-auth-actions"><Link className="secondary-button" to="/login">Sign in</Link><Link className="primary-action" to="/register">Sign up</Link></div>
+      <div className="dashboard-trip-actions">
+        <Link className="secondary-button" to="/trips">View trips</Link>
+        <Link className="primary-action" to="/trips/new">Create trip</Link>
+      </div>
       <p className="eyebrow">Welcome to TripSync</p>
       <h1>One place for every part of your group trip.</h1>
       <p className="workspace-lede">TripSync helps friends, families and travel groups organise a shared trip without losing plans across messages, notes and spreadsheets.</p>

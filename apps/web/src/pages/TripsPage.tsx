@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import { WorkspaceShell } from "../components/WorkspaceShell";
+import { InvitationInbox } from "../components/InvitationInbox";
 import { DestinationArt } from "../components/DestinationArt";
 import { destinationTheme } from "../components/destination-theme";
 import { ApiError } from "../lib/api";
@@ -30,6 +31,7 @@ export function TripsPage() {
   }, []);
 
   return <WorkspaceShell>
+    <InvitationInbox />
     <section className="workspace-page trips-page">
       <div className="workspace-page-heading">
         <div><p className="eyebrow">Your travel notes</p><h1>Trips</h1><p>Choose a trip to see its details or open its dedicated planning pages.</p></div>

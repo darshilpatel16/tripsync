@@ -39,6 +39,7 @@ const trip = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(tripApi.listMyInvitations).mockResolvedValue([]);
 });
 
 describe("trip frontend flow", () => {
@@ -140,5 +141,38 @@ describe("trip frontend flow", () => {
     expect(screen.getByRole("heading", { name: /one place for every part/i })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /what is tripsync for/i })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Trips" }).some((link) => link.getAttribute("href") === "/trips")).toBe(true);
+  });
+
+  it("lets an invited friend accept a request directly from the dashboard", async () => {
+    const invitation = {
+      id: "22222222-2222-4222-8222-222222222222",
+      email: authValue.user.email,
+      status: "PENDING" as const,
+      expiresAt: "2026-09-01T00:00:00.000Z",
+      createdAt: "2026-08-01T00:00:00.000Z",
+      trip,
+      invitedBy: { id: "owner-1", displayName: "Olivia Chen" },
+    };
+    vi.mocked(tripApi.listMyInvitations).mockResolvedValue([invitation]);
+    vi.mocked(tripApi.acceptDashboardInvitation).mockResolvedValue({ tripId: trip.id, status: "ACCEPTED" });
+
+    render(
+      <AuthContext.Provider value={authValue}>
+        <MemoryRouter initialEntries={["/dashboard"]}>
+          <Routes>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/trips/:tripId" element={<h1>Invited trip opened</h1>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>,
+    );
+
+    expect(await screen.findByRole("heading", { name: `You’re invited to ${trip.name}` })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /accept and view trip/i }));
+
+    await waitFor(() => {
+      expect(tripApi.acceptDashboardInvitation).toHaveBeenCalledWith(invitation.id);
+      expect(screen.getByRole("heading", { name: /invited trip opened/i })).toBeInTheDocument();
+    });
   });
 });
