@@ -1,5 +1,8 @@
-const API_URL =
-  import.meta.env.VITE_API_URL ?? "http://localhost:5000/api";
+// Production uses the same Vercel origin so authentication cookies remain
+// first-party. Developers can still override the local API address in .env.
+const API_URL = import.meta.env.PROD
+  ? "/api"
+  : (import.meta.env.VITE_API_URL ?? "http://localhost:5000/api");
 
 type ApiErrorDetails = Array<{
   path: string;
