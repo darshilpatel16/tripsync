@@ -1,185 +1,44 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { WorkspaceShell } from "../components/WorkspaceShell";
+import { Link } from "react-router";
 
-import { useAuth } from "../auth/useAuth";
-import { ProfilePhotoEditor } from "../components/ProfilePhotoEditor";
-import { ApiError } from "../lib/api";
-import {
-  acceptDashboardInvitation,
-  declineDashboardInvitation,
-  listMyInvitations,
-  listTrips,
-} from "../trips/trip-api";
-import type { InvitationDetail, TripSummary } from "../trips/trip-types";
-
-const formatTripDates = (startDate: string, endDate: string) => {
-  const formatter = new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  return `${formatter.format(new Date(startDate))} – ${formatter.format(new Date(endDate))}`;
-};
+const features = [
+  ["Plan every detail", "Keep destinations, dates and the group plan together in one calm workspace."],
+  ["Build an itinerary", "Add activities in order so everyone knows what is happening and when."],
+  ["Share expenses", "Track the trip budget, record costs and understand who owes what."],
+  ["Travel together", "See every traveller in one place and keep the whole group in sync."],
+];
 
 export function DashboardPage() {
-  const navigate = useNavigate();
-  const { logout, user } = useAuth();
-  const [trips, setTrips] = useState<TripSummary[]>([]);
-  const [invitations, setInvitations] = useState<InvitationDetail[]>([]);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [respondingInvitationId, setRespondingInvitationId] = useState<string | null>(null);
+  return <WorkspaceShell>
+    <section className="workspace-page dashboard-introduction">
+      <div className="dashboard-auth-actions"><Link className="secondary-button" to="/login">Sign in</Link><Link className="primary-action" to="/register">Sign up</Link></div>
+      <p className="eyebrow">Welcome to TripSync</p>
+      <h1>One place for every part of your group trip.</h1>
+      <p className="workspace-lede">TripSync helps friends, families and travel groups organise a shared trip without losing plans across messages, notes and spreadsheets.</p>
+      <div className="dashboard-travel-art" role="img" aria-label="Globe, flight path and suitcase illustration"><span className="dashboard-globe">◉</span><span className="dashboard-plane">✈</span><span className="dashboard-pin">●</span><span className="dashboard-case">▣</span><i /></div>
 
-  useEffect(() => {
-    let isActive = true;
-    Promise.all([listTrips(), listMyInvitations()])
-      .then(([tripList, invitationList]) => {
-        if (isActive) {
-          setTrips(tripList);
-          setInvitations(invitationList);
-          setStatus("ready");
-        }
-      })
-      .catch((error) => {
-        if (isActive) {
-          setErrorMessage(
-            error instanceof ApiError
-              ? error.message
-              : "TripSync could not load your dashboard.",
-          );
-          setStatus("error");
-        }
-      });
-    return () => { isActive = false; };
-  }, []);
-
-  const handleInvitation = async (
-    invitation: InvitationDetail,
-    decision: "accept" | "decline",
-  ) => {
-    setErrorMessage("");
-    setRespondingInvitationId(invitation.id);
-    try {
-      if (decision === "accept") {
-        const result = await acceptDashboardInvitation(invitation.id);
-        navigate(`/trips/${result.tripId}`);
-      } else {
-        await declineDashboardInvitation(invitation.id);
-        setInvitations((current) => current.filter((item) => item.id !== invitation.id));
-      }
-    } catch (error) {
-      setErrorMessage(
-        error instanceof ApiError
-          ? error.message
-          : "TripSync could not respond to this invitation.",
-      );
-    } finally {
-      setRespondingInvitationId(null);
-    }
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout();
-      navigate("/login", { replace: true });
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
-  return (
-    <main className="dashboard-page">
-      <nav className="dashboard-nav">
-        <Link className="brand" to="/dashboard">TripSync</Link>
-        <button className="secondary-button" disabled={isLoggingOut} onClick={handleLogout} type="button">
-          {isLoggingOut ? "Signing out…" : "Sign out"}
-        </button>
-      </nav>
-
-      <section className="dashboard-content">
-        <ProfilePhotoEditor />
-        <div className="dashboard-heading">
-          <div>
-            <p className="eyebrow">Your dashboard</p>
-            <h1>Welcome, {user?.displayName}.</h1>
-          </div>
-          <Link className="primary-action" to="/trips/new">Create trip</Link>
-        </div>
-
-        {status === "loading" ? <p className="status-message">Loading your dashboard…</p> : null}
-        {errorMessage ? <div className="form-message form-message-error" role="alert">{errorMessage}</div> : null}
-
-        {status === "ready" && invitations.length > 0 ? (
-          <section className="dashboard-invitations" aria-labelledby="dashboard-invitations-heading">
-            <div className="section-heading">
-              <p className="eyebrow">Invitations for you</p>
-              <h2 id="dashboard-invitations-heading">Your friends are planning.</h2>
-            </div>
-            <div className="dashboard-invitation-grid">
-              {invitations.map((invitation) => {
-                const isResponding = respondingInvitationId === invitation.id;
-                return (
-                  <article className="dashboard-invitation-card" key={invitation.id}>
-                    <div>
-                      <span className="invitation-label">Invited by {invitation.invitedBy.displayName}</span>
-                      <h3>{invitation.trip.name}</h3>
-                      <p className="trip-destination">{invitation.trip.destination}</p>
-                      <p>{formatTripDates(invitation.trip.startDate, invitation.trip.endDate)}</p>
-                    </div>
-                    <div className="dashboard-invitation-actions">
-                      <button
-                        disabled={isResponding}
-                        onClick={() => void handleInvitation(invitation, "accept")}
-                        type="button"
-                      >{isResponding ? "Responding…" : "Accept"}</button>
-                      <button
-                        className="secondary-button"
-                        disabled={isResponding}
-                        onClick={() => void handleInvitation(invitation, "decline")}
-                        type="button"
-                      >Decline</button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-
-        {status === "ready" && trips.length === 0 ? (
-          <div className="empty-state">
-            <h2>Your next trip starts here.</h2>
-            <p>Create one shared space for your destination, dates, group plans and expenses.</p>
-            <Link className="primary-action" to="/trips/new">Create your first trip</Link>
-          </div>
-        ) : null}
-
-        {status === "ready" && trips.length > 0 ? (
-          <section aria-labelledby="your-trips-heading">
-            <div className="section-heading your-trips-heading">
-              <p className="eyebrow">Your trips</p>
-              <h2 id="your-trips-heading">Plans you have joined.</h2>
-            </div>
-            <div className="trip-grid">
-              {trips.map((trip) => (
-                <Link className="trip-card" key={trip.id} to={`/trips/${trip.id}`}>
-                  <div className="trip-card-topline">
-                    <span>{trip.role === "OWNER" ? "Organising" : "Member"}</span>
-                    <span>{trip.currency}</span>
-                  </div>
-                  <h2>{trip.name}</h2>
-                  <p className="trip-destination">{trip.destination}</p>
-                  <p>{formatTripDates(trip.startDate, trip.endDate)}</p>
-                  <p>{trip.memberCount} {trip.memberCount === 1 ? "traveller" : "travellers"}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ) : null}
+      <section className="purpose-panel">
+        <div><h2>What is TripSync for?</h2></div>
+        <p>Create a trip, invite your group, build the itinerary together and keep shared spending transparent from the first idea to the journey home.</p>
       </section>
-    </main>
-  );
+
+      <div className="workspace-section-heading">
+        <p className="eyebrow">How it works</p>
+        <h2>Simple from start to finish.</h2>
+      </div>
+      <div className="how-to-grid">
+        <article><strong>1</strong><h3>Create a trip</h3><p>Add the destination, travel dates, currency and optional group budget.</p></article>
+        <article><strong>2</strong><h3>Make the plan</h3><p>Open the trip and use each dedicated page to add itinerary items, expenses and members.</p></article>
+        <article><strong>3</strong><h3>Stay in sync</h3><p>Everyone sees the same up-to-date plan, costs and group information.</p></article>
+      </div>
+
+      <div className="workspace-section-heading feature-heading">
+        <p className="eyebrow">Features</p>
+        <h2>Everything your group needs.</h2>
+      </div>
+      <div className="product-feature-grid">
+        {features.map(([title, description]) => <article key={title}><h3>{title}</h3><p>{description}</p></article>)}
+      </div>
+    </section>
+  </WorkspaceShell>;
 }

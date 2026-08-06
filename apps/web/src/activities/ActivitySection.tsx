@@ -347,7 +347,7 @@ export function ActivitySection({
   };
 
   return (
-    <section className="itinerary-section" aria-labelledby="itinerary-heading">
+    <section className="itinerary-section" id="itinerary" aria-labelledby="itinerary-heading">
       <div className="itinerary-heading">
         <div>
           <p className="eyebrow">Shared itinerary</p>

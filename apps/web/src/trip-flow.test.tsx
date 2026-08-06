@@ -6,6 +6,7 @@ import { AuthContext } from "./auth/auth-context";
 import { CreateTripPage } from "./pages/CreateTripPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { EditTripPage } from "./pages/EditTripPage";
+import { TripsPage } from "./pages/TripsPage";
 import * as tripApi from "./trips/trip-api";
 
 vi.mock("./trips/trip-api");
@@ -38,17 +39,16 @@ const trip = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(tripApi.listMyInvitations).mockResolvedValue([]);
 });
 
 describe("trip frontend flow", () => {
-  it("shows the signed-in user's trips on the dashboard", async () => {
+  it("shows the signed-in user's trips on the dedicated trips page", async () => {
     vi.mocked(tripApi.listTrips).mockResolvedValue([trip]);
 
     render(
       <AuthContext.Provider value={authValue}>
-        <MemoryRouter initialEntries={["/dashboard"]}>
-          <DashboardPage />
+        <MemoryRouter initialEntries={["/trips"]}>
+          <TripsPage />
         </MemoryRouter>
       </AuthContext.Provider>,
     );
@@ -128,50 +128,17 @@ describe("trip frontend flow", () => {
     });
   });
 
-  it("shows and accepts an invitation from the dashboard", async () => {
-    const invitation = {
-      id: "22222222-2222-4222-8222-222222222222",
-      email: authValue.user.email,
-      status: "PENDING" as const,
-      expiresAt: "2026-08-07T00:00:00.000Z",
-      createdAt: "2026-07-31T00:00:00.000Z",
-      trip: {
-        id: trip.id,
-        name: trip.name,
-        destination: trip.destination,
-        startDate: trip.startDate,
-        endDate: trip.endDate,
-      },
-      invitedBy: {
-        id: "33333333-3333-4333-8333-333333333333",
-        displayName: "Trip Owner",
-      },
-    };
-    vi.mocked(tripApi.listTrips).mockResolvedValue([]);
-    vi.mocked(tripApi.listMyInvitations).mockResolvedValue([invitation]);
-    vi.mocked(tripApi.acceptDashboardInvitation).mockResolvedValue({
-      tripId: trip.id,
-      status: "ACCEPTED",
-    });
-
+  it("uses the dashboard to explain TripSync and links to the real trips page", () => {
     render(
       <AuthContext.Provider value={authValue}>
         <MemoryRouter initialEntries={["/dashboard"]}>
-          <Routes>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/trips/:tripId" element={<h1>Accepted trip opened</h1>} />
-          </Routes>
+          <DashboardPage />
         </MemoryRouter>
       </AuthContext.Provider>,
     );
 
-    expect(await screen.findByRole("heading", { name: trip.name })).toBeInTheDocument();
-    expect(screen.getByText(/invited by trip owner/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Accept" }));
-
-    await waitFor(() => {
-      expect(tripApi.acceptDashboardInvitation).toHaveBeenCalledWith(invitation.id);
-      expect(screen.getByRole("heading", { name: /accepted trip opened/i })).toBeInTheDocument();
-    });
+    expect(screen.getByRole("heading", { name: /one place for every part/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /what is tripsync for/i })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Trips" }).some((link) => link.getAttribute("href") === "/trips")).toBe(true);
   });
 });

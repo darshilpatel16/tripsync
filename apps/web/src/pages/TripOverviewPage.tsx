@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { ActivitySection } from "../activities/ActivitySection";
 import { ExpenseSection } from "../expenses/ExpenseSection";
 import { Avatar } from "../components/Avatar";
+import { WorkspaceShell } from "../components/WorkspaceShell";
 import { useAuth } from "../auth/useAuth";
 import { ApiError } from "../lib/api";
 import {
@@ -145,11 +146,7 @@ export function TripOverviewPage() {
   if (!trip) return <main className="status-page"><p>Loading trip…</p></main>;
 
   return (
-    <main className="dashboard-page">
-      <nav className="dashboard-nav">
-        <Link className="brand" to="/dashboard">TripSync</Link>
-        <div className="nav-actions"><Link className="nav-link" to="/dashboard">All trips</Link></div>
-      </nav>
+    <WorkspaceShell tripId={trip.id}>
       <section className="trip-overview">
         <div className="trip-hero">
           <div className="trip-hero-heading">
@@ -180,7 +177,7 @@ export function TripOverviewPage() {
 
         {user ? <ExpenseSection currentUserId={user.id} trip={trip} /> : null}
 
-        <div className="overview-grid">
+        <div className="overview-grid" id="members">
           <section className="overview-card">
             <p className="eyebrow">Travellers</p>
             <h2>{trip.memberCount} in this trip</h2>
@@ -265,12 +262,12 @@ export function TripOverviewPage() {
         </div>
 
         {trip.role === "OWNER" ? (
-          <div className="danger-zone">
+          <div className="danger-zone" id="settings">
             <div><strong>Delete trip</strong><p>Permanently remove this trip and its shared information.</p></div>
             <button className="danger-button" disabled={isWorking} onClick={() => void handleDelete()} type="button">{isWorking ? "Working…" : "Delete trip"}</button>
           </div>
         ) : null}
       </section>
-    </main>
+    </WorkspaceShell>
   );
 }

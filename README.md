@@ -1,137 +1,60 @@
 # TripSync
 
-TripSync is a full-stack collaborative travel-planning application. It helps groups organise trips, build shared itineraries, vote on activities, manage invitations, record expenses, track a budget, and understand who owes whom.
+TripSync is a shared workspace for planning group travel. It keeps the trip
+details, itinerary, travellers, budget, and day-to-day expenses in one place so
+the group does not have to piece the plan together from separate chats and
+spreadsheets.
 
-## Project status
+The application is split into an Express API and a React web client. Both live
+in this repository and are managed as npm workspaces.
 
-**Stable through Milestone 4.**
+## What you can do
 
-- 88 API tests
-- 16 web application tests
-- ESLint checks with zero warnings
-- Successful TypeScript and Vite production builds
-- Responsive desktop and mobile layouts
+- Create a trip with dates, destination, currency, and an optional budget
+- Invite travellers and manage the member list
+- Propose itinerary activities and vote on the plan
+- Confirm, edit, or remove activities according to member permissions
+- Record shared expenses with equal or custom splits
+- See individual balances and suggested repayments
+- Manage account details and a profile photo
 
-## Core features
+The web interface uses a destination-aware travel theme. Known destinations
+such as New York, London, Japan, Paris, Italy, and coastal locations receive
+their own visual treatment; other destinations use the standard TripSync theme.
 
-### Authentication and accounts
+## Tech stack
 
-- Register, sign in, and sign out
-- Secure password hashing and persistent sessions
-- Protected application routes
-- Password-reset flow
-- Profile and profile-photo management
+| Area | Tools |
+| --- | --- |
+| Web | React, TypeScript, Vite, React Router |
+| API | Node.js, Express, TypeScript, Zod |
+| Data | PostgreSQL, Prisma |
+| Tests | Vitest, Supertest, React Testing Library |
 
-### Trips and collaboration
-
-- Create, view, edit, and delete trips
-- Set destination, travel dates, and currency
-- Invite travellers by email
-- Accept or decline invitations
-- View members and invitation history
-- Owner and member permissions
-
-### Shared itinerary
-
-- Propose activities with location, notes, and times
-- Organise activities by trip day
-- Vote on proposed activities
-- View voting participation
-- Confirm, return, or cancel activities
-- Edit and delete activities according to permissions
-
-### Expenses and budgets
-
-- Record shared expenses
-- Split costs equally or use custom amounts
-- Edit and delete expenses
-- Track spending against the trip budget
-- View individual balances
-- Generate settlement suggestions
-
-### User experience
-
-- Responsive desktop and mobile design
-- Loading, validation, success, and error feedback
-- Empty states
-- Protected destructive actions
-- Consistent dashboard and trip navigation
-
-## Technology stack
-
-### Frontend
-
-- React
-- TypeScript
-- Vite
-- React Router
-- React Testing Library
-
-### Backend
-
-- Node.js
-- Express
-- TypeScript
-- Zod
-- Vitest
-- Supertest
-
-### Database
-
-- PostgreSQL
-- Prisma ORM
-
-## Architecture
-
-```text
-React and Vite web application
-             |
-             | HTTP/JSON REST API
-             v
-Node.js and Express API
-             |
-             | Prisma ORM
-             v
-         PostgreSQL
-```
-
-The frontend and backend are managed in one npm workspace. The API handles authentication, permissions, validation, and database access. The React application provides the collaborative user interface.
-
-## Repository layout
+## Repository structure
 
 ```text
 apps/
-  api/       Express API, Prisma schema, routes, services, and tests
-  web/       React application, components, and flow tests
-docs/        Product and architecture decisions
+  api/       Express routes, services, Prisma schema, and API tests
+  web/       React pages, shared components, styles, and browser-flow tests
+docs/        Product notes and architecture decisions
 ```
 
-## Local setup
+## Running TripSync locally
 
-### Prerequisites
+You will need Node.js, npm, PostgreSQL, and Git.
 
-- Node.js and npm
-- PostgreSQL
-- Git
-
-### Installation
-
-1. Clone the repository:
+1. Clone the repository and install dependencies.
 
    ```bash
    git clone https://github.com/darshilpatel16/tripsync.git
    cd tripsync
-   ```
-
-2. Install dependencies:
-
-   ```bash
    npm install
    ```
 
-3. Copy the API environment template.
+2. Create the API environment file.
 
-   Windows PowerShell:
+   PowerShell:
 
    ```powershell
    Copy-Item apps/api/.env.example apps/api/.env
@@ -143,64 +66,40 @@ docs/        Product and architecture decisions
    cp apps/api/.env.example apps/api/.env
    ```
 
-4. Create a PostgreSQL database named `tripsync`.
+3. Create a PostgreSQL database named `tripsync`, then update `DATABASE_URL` in
+   `apps/api/.env` with the correct username and password.
 
-5. Update `DATABASE_URL` in `apps/api/.env` with your PostgreSQL credentials.
-
-6. Generate Prisma and run the migrations:
+4. Generate the Prisma client and apply the migrations.
 
    ```bash
    npm run db:generate
    npm run db:migrate
    ```
 
-7. Start the application:
+5. Start the API and web client.
 
    ```bash
    npm run dev
    ```
 
-8. Open:
+The web app runs at `http://localhost:5173`. The API health endpoint is
+`http://localhost:5000/api/health`.
 
-   - Web application: `http://localhost:5173`
-   - API health check: `http://localhost:5000/api/health`
+## Commands
 
-## Available scripts
-
-| Command | Purpose |
+| Command | Description |
 | --- | --- |
 | `npm run dev` | Start the API and web development servers |
 | `npm test` | Run all API and web tests |
-| `npm run lint` | Run ESLint |
-| `npm run build` | Create production builds |
+| `npm run lint` | Check the source with ESLint |
+| `npm run build` | Build both workspaces for production |
 | `npm run db:generate` | Generate the Prisma client |
-| `npm run db:migrate` | Run database migrations |
+| `npm run db:migrate` | Apply database migrations |
 | `npm run db:studio` | Open Prisma Studio |
 
-## Delivery milestones
+## Before opening a pull request
 
-- **Milestone 0:** Workspace foundation and API health check
-- **Milestone 1:** Authentication, password reset, and secure sessions
-- **Milestone 2:** Trips, memberships, and invitations
-- **Milestone 3:** Collaborative itinerary and voting
-- **Milestone 4:** Expenses, custom splits, balances, settlements, and budgets
-
-## Future improvements
-
-Possible future releases include:
-
-- Destination weather forecasts
-- Maps and place discovery
-- Local event discovery
-- Transport planning
-- Email delivery for invitations and password resets
-- Production hosting and monitoring
-
-These features will be developed independently so the stable core workflow remains protected.
-
-## Quality checks
-
-Before merging changes, run:
+Run the same checks used for the current branch:
 
 ```bash
 npm test
@@ -208,4 +107,9 @@ npm run lint
 npm run build
 ```
 
-The stable Milestone 4 release passes all three checks.
+At the time of writing, the suite contains 88 API tests and 16 web tests.
+
+## Planned work
+
+Weather, maps, local events, and messaging are intentionally outside the current
+scope. They can be added later without changing the core trip-planning workflow.
