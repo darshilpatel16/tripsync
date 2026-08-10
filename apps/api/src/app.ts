@@ -10,9 +10,16 @@ import { invitationRouter } from "./modules/trips/invitation.routes.js";
 import cookieParser from "cookie-parser";
 import { activityRouter } from "./modules/activities/activity.routes.js";
 import { expenseRouter } from "./modules/expenses/expense.routes.js";
+import { requireSameOrigin } from "./middleware/same-origin.js";
 
 export const createApp = () => {
   const app = express();
+
+  // Vercel terminates HTTPS before forwarding requests. Trust exactly one
+  // proxy hop so request.ip and secure-request metadata reflect the visitor.
+  if (env.NODE_ENV === "production") {
+    app.set("trust proxy", 1);
+  }
 
   app.disable("x-powered-by");
   app.use(helmet());
@@ -23,6 +30,7 @@ export const createApp = () => {
   }
   app.use(express.json({ limit: "2mb" }));
   app.use(cookieParser());
+  app.use(requireSameOrigin);
   app.use("/api/health", healthRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/trips/:tripId/activities", activityRouter);

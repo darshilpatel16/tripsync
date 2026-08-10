@@ -97,6 +97,27 @@ The web app runs at `http://localhost:5173`. The API health endpoint is
 | `npm run db:migrate` | Apply database migrations |
 | `npm run db:studio` | Open Prisma Studio |
 
+## Security
+
+TripSync treats the API as the security boundary. The browser never decides
+whether a user may view or change a trip; each protected route verifies the
+session and the user's membership or owner role on the server.
+
+- Passwords are hashed with Argon2 and are never stored as plain text.
+- Session, password-reset, and invitation tokens are stored as one-way hashes.
+- Authentication cookies are HTTP-only, secure in production, and use
+  `SameSite=Lax`.
+- Registration and other authentication endpoints are rate limited.
+- Request bodies are validated with Zod before they reach service code.
+- State-changing production requests must come from the configured TripSync
+  origin, providing server-side CSRF protection.
+- Production responses include a Content Security Policy and additional
+  browser security headers.
+
+Secrets belong in local environment files or the hosting provider's encrypted
+environment settings. They must not be committed to the repository. See
+[`SECURITY.md`](SECURITY.md) for reporting and deployment guidance.
+
 ## Before opening a pull request
 
 Run the same checks used for the current branch:
@@ -107,7 +128,7 @@ npm run lint
 npm run build
 ```
 
-At the time of writing, the suite contains 88 API tests and 16 web tests.
+At the time of writing, the suite contains 92 API tests and 17 web tests.
 
 ## Planned work
 

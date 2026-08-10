@@ -64,9 +64,10 @@ const sessionCookieOptions: CookieOptions = {
   secure: env.NODE_ENV === "production",
   sameSite: "lax",
   path: "/",
+  priority: "high",
 };
 
-authRouter.post("/register", async (request, response, next) => {
+authRouter.post("/register", authenticationRateLimiter, async (request, response, next) => {
   const validationResult = registerBodySchema.safeParse(request.body);
 
   if (!validationResult.success) {
